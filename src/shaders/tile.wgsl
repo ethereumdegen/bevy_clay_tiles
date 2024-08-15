@@ -122,21 +122,15 @@ fn fragment(
 
     let blended_color = color_from_diffuse_texture  ;
     var blended_normal = normal_from_texture  ;
-     blended_normal =  normalize(blended_color); // FOR NOW  // normalize(blended_normal); 
+     blended_normal =  normalize(blended_normal); // FOR NOW  // normalize(blended_normal); 
                     
    let blended_normal_vec3 = vec3<f32>( blended_normal.r, blended_normal.g, blended_normal.b );         
    
-  // generate a PbrInput struct from the StandardMaterial bindings
-  //remove this fn to make things faster as it duplicates work in gpu .. 
+   
     var pbr_input = pbr_input_from_standard_material(mesh, is_front);
-      
-    
- 
-    //hack the material (StandardMaterialUniform)  so the color is from the terrain splat 
+        
     pbr_input.material.base_color =  blended_color;
-
-     
-    
+  
       let double_sided = (pbr_input.material.flags & STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT) != 0u;
  
      
