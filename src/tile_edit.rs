@@ -1,9 +1,36 @@
 
+use core::f32::consts::PI;
 use bevy::{prelude::* };
 use geo::{Polygon, LineString, BooleanOps};
 use bevy::render::mesh::Indices;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology::TriangleList;
+
+
+
+pub fn draw_grid_gizmo(
+  mut gizmos: Gizmos,
+
+   ){
+
+
+
+	   gizmos.grid(
+        Vec3::ZERO,
+        Quat::from_rotation_x(PI / 2.),
+        UVec2::splat(100),
+        Vec2::splat(1.),
+        // Light gray
+        LinearRgba::gray(0.95),
+    );
+
+
+     // UVec2::new(10, 10),
+      //  Vec2::splat(2.),
+
+
+}
+
 
 
 pub fn build_tile_layer(
@@ -14,6 +41,10 @@ pub fn build_tile_layer(
 
 
 	//these are the brushes !! 
+
+	// always ignore the FIRST brushes operation type. 
+
+
 
        // Convert Vec<(f64, f64)> to geo::LineString
     let exterior1 = LineString::from(vec![
@@ -41,7 +72,7 @@ pub fn build_tile_layer(
 
     // Extrude the resulting 2D shape into a 3D mesh
     for polygon in result_polygon {
-        let mesh = extrude_polygon_to_3d(&polygon);
+        let mesh = extrude_polygon_to_3d(&polygon , 0.2 );
 
         let material_color =  Color::srgb(0.8, 0.7, 0.6); 
 
@@ -55,7 +86,7 @@ pub fn build_tile_layer(
     }
 }
 
-fn extrude_polygon_to_3d(polygon: &Polygon<f64>) -> Mesh {
+fn extrude_polygon_to_3d(polygon: &Polygon<f64>, height:f32 ) -> Mesh {
    let mut mesh = Mesh::new( TriangleList , RenderAssetUsages::default());
 
     // Create vertices
@@ -66,7 +97,7 @@ fn extrude_polygon_to_3d(polygon: &Polygon<f64>) -> Mesh {
     let exterior = polygon.exterior();
     for point in exterior.coords() {
         vertices.push([point.x as f32, point.y as f32, 0.0]); // Bottom vertices
-        vertices.push([point.x as f32, point.y as f32, 1.0]); // Top vertices
+        vertices.push([point.x as f32, point.y as f32, height]); // Top vertices
     }
 
     let vert_count = vertices.len() as u32;
