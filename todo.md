@@ -1,6 +1,11 @@
  
     
-1.  When this plugin is put into Edit Mode, show a grid gizmo 
+1.  Need for the builder to use the height of the current tool height 
+
+
+2.  Need the built mesh to be originned at the origin of the builder that built it 
+
+3. Need to be able to use the 'modify height' tool to select a built tile and stretch its height .. or bevel. 
 
 
 ### SAVE FILE 
@@ -8,9 +13,11 @@
 
 - In each HeightLayer, there is an array of 'TileLayers' - one for each Tile Type .
 
-Each TileTypeLayer has a specific tile type.  It has 'draw data' which is an array of 'brushes'.  All of the brushes are applied together for this layer and then extruded into a 3d model .   
+ 
 
-use i_overlay. 
+
+
+
 
 
 
@@ -27,5 +34,6 @@ use i_overlay.
 
 
 ## NOTES 
+ 
 
-- floor tiles should extrude DOWNwards ( 0.25 ? )
+
