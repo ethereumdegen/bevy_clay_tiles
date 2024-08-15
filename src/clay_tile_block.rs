@@ -90,7 +90,7 @@ impl ClayTileBlockBuilder {
 
 
 
-    pub fn points_are_clockwise(&self) -> bool {
+    pub fn points_are_counterclockwise(&self) -> bool {
         let points = &self.polygon_points;
         let len = points.len();
         let mut sum = 0.0;
@@ -106,12 +106,12 @@ impl ClayTileBlockBuilder {
             sum += (p2_signed.x - p1_signed.x) as f32 * (p2_signed.y + p1_signed.y) as f32;
         }
 
-        sum <= 0.0
+        sum > 0.0
     }
 
     // Function to ensure points are in counterclockwise order
-    pub fn ensure_clockwise(&mut self) {
-        if !self.points_are_clockwise() {
+    pub fn ensure_counterclockwise(&mut self) {
+        if !self.points_are_counterclockwise() {
             self.polygon_points.reverse();
         }
     }
@@ -141,7 +141,7 @@ impl ClayTileBlockBuilder {
             return None ;
         }
 
-        let polygon_points_cw = if self.points_are_clockwise() {
+        let polygon_points_ccw = if self.points_are_counterclockwise() {
             self.polygon_points.clone()  // If CCW, use as is
         } else {
             let mut reversed_points = self.polygon_points.clone(); // Clone and reverse if not CCW
@@ -153,7 +153,7 @@ impl ClayTileBlockBuilder {
         Some(
             ClayTileBlock {
 
-                polygon_points: polygon_points_cw
+                polygon_points: polygon_points_ccw
             }
         )
      }
@@ -233,7 +233,7 @@ pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 #[derive(Component)]
 pub struct ClayTileBlock {
 
-        //should always be clockwise ! 
+        //should always be counterclockwise ! 
     pub polygon_points: Vec<IVec2>
 
 
@@ -262,7 +262,7 @@ impl ClayTileBlock {
         if self.polygon_points.len() < 3 {
             return false ;
         }
-        
+
         //first point is the same as last point 
         if let Some(first_point) = self.polygon_points.first() {
             if let Some(last_point) = self.polygon_points.last() {
@@ -289,7 +289,7 @@ impl ClayTileBlock {
       //  result_polygon.exterior_coords_iter()
  
 
-       let (vertices, indices, uvs) = extrude_polygon_to_3d(  &polygon .into() , 0.2  );
+       let (vertices, indices, uvs) = extrude_polygon_to_3d(  &polygon .into() , 0.2  ) ?;
 
          // Convert vertices to the expected format for Bevy
         let vertex_positions: Vec<[f32; 3]> = vertices.iter().map(point3_to_array_f32).collect();
@@ -427,7 +427,10 @@ pub fn build_tile_block_meshes(
              let mesh = clay_tile_block.build_mesh();
 
 
-              let Some( mesh ) = mesh else {continue};
+              let Some( mesh ) = mesh else {
+                warn!("could not build mesH!!");  //remove entity ? 
+                continue
+            };
              
             let terrain_mesh_handle = meshes.add(mesh);
 

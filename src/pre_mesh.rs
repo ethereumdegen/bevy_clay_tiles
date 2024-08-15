@@ -2,6 +2,8 @@
 use crate::clay_tile::ClayTileComponent;
 //use crate::clay_tile_operation::OperationType;
  
+
+
 use core::f32::consts::PI;
 use bevy::{prelude::* };
 use geo::{MultiPolygon, BooleanOps, CoordsIter, LineString, OpType, Polygon};
@@ -127,7 +129,7 @@ fn build_combined_polygon(operations: &Vec<ClayTileOperation>) -> Option<MultiPo
 
 
 // Function to extrude a Polygon into a 3D mesh
-pub fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>, Vec<[usize; 3]>,Vec<[f32; 2]>) {
+pub fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> Option< (Vec<[f64; 3]>, Vec<[usize; 3]>,Vec<[f32; 2]>) > {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -154,16 +156,16 @@ pub fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64;
         let top2 = bottom2 + 1;
 
         // Side triangles
-        indices.push([bottom1, top1, bottom2]);
-        indices.push([top1, top2, bottom2]);
+        indices.push([top1,bottom1,  bottom2]);
+        indices.push([top2, top1,  bottom2]);
     }
 
     // Closing the top and bottom (optional depending on the desired effect)
     for i in 1..(vertex_count - 1) {
         // Bottom
-        indices.push([ 2 * i,0, 2 * (i + 1)]);
+        indices.push([ 0, 2 * i, 2 * (i + 1)]);
         // Top
-        indices.push([ 2 * i + 1,1, 2 * (i + 1) + 1]);
+        indices.push([1,  2 * i + 1,  2 * (i + 1) + 1]);
     }
 
 
@@ -171,7 +173,7 @@ pub fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64;
     let uvs: Vec<[f32; 2]> = generate_uvs(&vertices);
 
 
-    (vertices, indices , uvs)
+   Some(  (vertices, indices , uvs) )
 }
 
 
