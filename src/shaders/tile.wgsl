@@ -208,7 +208,7 @@ fn fragment(
 
     //need to fix lighting !!! 
     
-    let final_color = vec4( blended_color.rgb, 1.0);
+    let final_color = vec4( pbr_out.color.rgb, 1.0);
           
 
      
