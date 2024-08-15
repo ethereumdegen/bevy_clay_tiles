@@ -70,6 +70,12 @@ impl TileEditingResource {
         self.selected_tool.is_some()
     }
 
+    pub fn set_build_layer_height(&mut self, height: u32 ){
+
+
+        self.build_grid_data.height_offset = height;
+    }
+
     pub fn set_selected_tool(&mut self, tool_type: Option<EditingTool>) {
 
 
@@ -131,13 +137,15 @@ pub struct TileBuildGridData {
      let grid_enabled = &tile_edit_resource.get_build_grid_enabled();
 
         if *grid_enabled {
-          let grid_position = Vec3::new(0.0,1.0 *  *height_offset as f32, 0.0);
+
+            //bizarre but.. yeah lol . due to quat rot 
+          let grid_position = Vec3::new(0.0,0.0, -1.0 *  *height_offset as f32);
 
 
            gizmos.grid(
                 grid_position,
-                Quat::from_rotation_x(PI / 2.),
-                UVec2::splat(100),
+                Quat::from_rotation_x( PI / 2.),
+                UVec2::splat(1000),
                 Vec2::splat(1.),
                 // Light gray
                 LinearRgba::gray(0.95),
