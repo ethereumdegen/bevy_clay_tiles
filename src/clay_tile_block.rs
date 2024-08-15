@@ -241,6 +241,9 @@ pub fn build_tile_block_meshes(
                         // can be used in forward or deferred mode.
                        // opaque_render_method: OpaqueRendererMethod::Auto,
                        // alpha_mode: AlphaMode::Mask(0.1),
+                        
+                        unlit: true,  // need this for now ..
+
 
                         reflectance: 0.2,
                         perceptual_roughness: 0.7,

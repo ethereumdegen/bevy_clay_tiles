@@ -202,8 +202,16 @@ fn fragment(
 
     //need to fix lighting !!! 
     
-    let final_color = vec4( pbr_out.color.rgb, 1.0);
-          
+    var final_color = vec4( pbr_out.color.rgb, 1.0);
+    
+
+     let unlit = (pbr_input.material.flags & STANDARD_MATERIAL_FLAGS_UNLIT_BIT) != 0u;
+    
+    if unlit {
+         final_color = vec4( blended_color.rgb, 1.0);
+
+    }
+
 
      
     
