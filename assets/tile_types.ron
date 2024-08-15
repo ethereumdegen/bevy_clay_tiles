@@ -1,0 +1,14 @@
+(
+
+  tile_types: [
+
+  	//texture index 0 
+  		(
+  		  name: "gray_bricks",
+
+  		)
+
+  ]
+
+
+)

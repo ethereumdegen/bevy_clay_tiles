@@ -1,17 +1,23 @@
-use crate::tile_edit::draw_grid_gizmo;
-use crate::tile_edit::build_tile_layer;
+use bevy_clay_tiles::draw_grid_gizmo;
+use bevy_clay_tiles::clay_tile_operation::ClayShapeType;
+use bevy_clay_tiles::clay_tile_operation::ClayTileOperation;
+use bevy_clay_tiles::clay_tile_operation::OperationType;
+use bevy_clay_tiles::clay_tile_layer::{ClayTileLayer,ClayTileLayerBuildData};
+use bevy_clay_tiles::tiles_config::ClayTilesConfig;
+use bevy_clay_tiles::tiles::ClayTilesRoot;
+  
 use bevy::prelude::*;
  
 
  use bevy_clay_tiles::BevyClayTilesPlugin;
- use bevy_clay_tiles::tile_edit;
+ 
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(BevyClayTilesPlugin {})
         //.add_startup_system(setup)
-        .add_systems(Startup, (setup, build_tile_layer) )
+        .add_systems(Startup, setup )
         .add_systems(Update, (rotate_camera, draw_grid_gizmo) )
         .run();
 }
@@ -41,6 +47,45 @@ fn setup(
         color: Color::srgb(1.0,1.0,1.0),
         brightness: 700.0,
     });
+
+
+
+
+        let tile_operations = vec![
+        ClayTileOperation {
+            height_layer: 1,
+            operation_type: OperationType::Union,  //this doesnt matter
+            shape_type: ClayShapeType::Rectangle,
+            dimensions: [[-5, -5], [3, 2]],
+        },
+        ClayTileOperation {
+            height_layer: 1,
+            operation_type: OperationType::Union,
+            shape_type: ClayShapeType::Rectangle,
+            dimensions: [[-2, -2], [1, 2]],
+        },
+    ];
+
+
+        let clay_tiles_root =  commands
+        .spawn(SpatialBundle::default())
+        .insert(ClayTilesConfig::load_from_file("assets/tiles_config.ron").unwrap())
+        .insert(ClayTilesRoot::new())
+        .id();
+
+
+
+        let clay_tile_layer = commands
+        .spawn(SpatialBundle::default())
+        .insert(ClayTileLayer)
+        .insert( ClayTileLayerBuildData {tile_operations} )
+        .id();
+
+
+        commands.entity(clay_tiles_root)
+        .add_child(clay_tile_layer);
+
+
 
 
          let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
