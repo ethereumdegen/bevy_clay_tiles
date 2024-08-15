@@ -23,3 +23,9 @@ use i_overlay.
 - walls 
 
 - diagonals too ?
+
+
+
+## NOTES 
+
+- floor tiles should extrude DOWNwards ( 0.25 ? )
