@@ -1,7 +1,7 @@
 
 use core::f32::consts::PI;
 use bevy::{prelude::* };
-use geo::{Polygon, LineString, BooleanOps};
+use geo::{MultiPolygon, BooleanOps, CoordsIter, LineString, OpType, Polygon};
 use bevy::render::mesh::Indices;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology::TriangleList;
@@ -68,10 +68,38 @@ pub fn build_tile_layer(
     let poly2 = Polygon::new(exterior2, vec![]);
 
     // Apply the difference operation using geo's BooleanOps
-    let result_polygon = poly1.difference(&poly2);
+    let result_polygon = poly1.boolean_op(&poly2,  OpType::Difference);
+    
+  //  result_polygon.exterior_coords_iter()
+
+
+   let (vertices, indices) = extrude_polygon_to_3d( &result_polygon , 0.2  );
+
+     // Convert vertices to the expected format for Bevy
+    let vertex_positions: Vec<[f32; 3]> = vertices.iter().map(point3_to_array_f32).collect();
+
+    // Flatten indices for Bevy
+    let flattened_indices = flatten_indices(&indices);
+
+   let mut mesh = Mesh::new(TriangleList, RenderAssetUsages::default());
+
+    mesh.insert_attribute(
+        Mesh::ATTRIBUTE_POSITION,
+        vertex_positions,
+    );
+    mesh.insert_indices(Indices::U32(flattened_indices));
+
+   let material_color =  Color::srgb(0.8, 0.7, 0.6); 
+
+   commands.spawn(PbrBundle {
+            mesh: meshes.add(mesh),
+            material: materials.add( material_color ),
+            ..Default::default()
+        });
+
 
     // Extrude the resulting 2D shape into a 3D mesh
-    for polygon in result_polygon {
+    /*for polygon in result_polygon {
         let mesh = extrude_polygon_to_3d(&polygon , 0.2 );
 
         let material_color =  Color::srgb(0.8, 0.7, 0.6); 
@@ -83,51 +111,58 @@ pub fn build_tile_layer(
             material: materials.add( material_color ),
             ..Default::default()
         });
-    }
+    }*/
 }
 
-fn extrude_polygon_to_3d(polygon: &Polygon<f64>, height:f32 ) -> Mesh {
-   let mut mesh = Mesh::new( TriangleList , RenderAssetUsages::default());
 
-    // Create vertices
-    let mut vertices = vec![];
-    let mut indices = vec![];
+// Function to extrude a Polygon into a 3D mesh
+fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>, Vec<[usize; 3]>) {
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
 
-    // Iterate over the exterior of the polygon to generate vertices
-    let exterior = polygon.exterior();
-    for point in exterior.coords() {
-        vertices.push([point.x as f32, point.y as f32, 0.0]); // Bottom vertices
-        vertices.push([point.x as f32, point.y as f32, height]); // Top vertices
-    }
+    let vertex_count = polygon.exterior_coords_iter().count().clone();
 
-    let vert_count = vertices.len() as u32;
+    // Iterate over the exterior of the polygon
+    let exterior_coords = polygon.exterior_coords_iter() ;
 
-    // Create the sides by connecting top and bottom vertices
-    for i in (0..vert_count).step_by(2) {
-        let next = (i + 2) % vert_count;
-        indices.extend_from_slice(&[
-            i, i + 1, next,     // First triangle
-            next, i + 1, next + 1, // Second triangle
-        ]);
-    }
-
-    // Fill the top and bottom faces (optional, depending on what you need)
-    for i in 0..(vert_count / 2 - 2) {
-        indices.push(0);
-        indices.push(i * 2 + 2);
-        indices.push(i * 2 + 4);
-
-        indices.push(1);
-        indices.push(i * 2 + 3);
-        indices.push(i * 2 + 5);
+    // Create bottom and top vertices
+    for coord in exterior_coords {
+        // Bottom vertices (y = 0)
+        vertices.push( [coord.x, 0.0, coord.y] );
+        // Top vertices (y = height)
+        vertices.push( [coord.x, height, coord.y ]);
     }
 
     
 
-    mesh.insert_attribute(
-        Mesh::ATTRIBUTE_POSITION,
-        vertices.iter().cloned().collect::<Vec<[f32; 3]>>(),
-    );
-    mesh.insert_indices( Indices::U32(indices) );
-    mesh
+    // Connect vertices to form triangles for the sides
+    for i in 0..(vertex_count - 1) {
+        let bottom1 = 2 * i;
+        let bottom2 = 2 * (i + 1);
+        let top1 = bottom1 + 1;
+        let top2 = bottom2 + 1;
+
+        // Side triangles
+        indices.push([bottom1, top1, bottom2]);
+        indices.push([top1, top2, bottom2]);
+    }
+
+    // Closing the top and bottom (optional depending on the desired effect)
+    for i in 1..(vertex_count - 1) {
+        // Bottom
+        indices.push([0, 2 * i, 2 * (i + 1)]);
+        // Top
+        indices.push([1, 2 * i + 1, 2 * (i + 1) + 1]);
+    }
+
+    (vertices, indices)
+}
+
+fn point3_to_array_f32(point: &[f64; 3]) -> [f32; 3] {
+    [point[0] as f32, point[1] as f32, point[2] as f32]
+}
+
+// Function to flatten indices
+fn flatten_indices(indices: &Vec<[usize; 3]>) -> Vec<u32> {
+    indices.iter().flat_map(|&[a, b, c]| vec![a as u32, b as u32, c as u32]).collect()
 }
