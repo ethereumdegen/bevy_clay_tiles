@@ -205,6 +205,9 @@ fn fragment(
 
   //  let within_tool_radius = f32(distance <= tool_radius);
 
+
+    //need to fix lighting !!! 
+    
     let final_color = vec4( blended_color.rgb, 1.0);
           
 
