@@ -69,15 +69,13 @@ pub fn build_mesh_from_operations(
   	return None
   } ;
 
-   let (vertices, indices) = extrude_polygon_to_3d( &result_polygon , 0.2  );
+   let (vertices, indices, uvs) = extrude_polygon_to_3d( &result_polygon , 0.2  );
 
      // Convert vertices to the expected format for Bevy
     let vertex_positions: Vec<[f32; 3]> = vertices.iter().map(point3_to_array_f32).collect();
 
  
-    // Generate UV coordinates
-    let uvs: Vec<[f32; 2]> = generate_uvs(&vertices);
-
+   
 
     // Flatten indices for Bevy
     let flattened_indices = flatten_indices(&indices);
@@ -100,71 +98,7 @@ pub fn build_mesh_from_operations(
     Some(mesh)
 
 }
-
-/*
-pub fn build_tile_layer(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {	
-
-
-	//these are the brushes !! 
-
-	// always ignore the FIRST brushes operation type. 
-
-  
-
-       // Convert Vec<(f64, f64)> to geo::LineString
-   /* let exterior1 = LineString::from(vec![
-        (-0.5, -0.5),
-        (0.5, -0.5),
-        (0.5, 0.5),
-        (-0.5, 0.5),
-        (-0.5, -0.5), // Ensure the polygon is closed
-    ]);
-
-    let exterior2 = LineString::from(vec![
-        (-0.2, -0.2),
-        (0.2, -0.2),
-        (0.2, 0.2),
-        (-0.2, 0.2),
-        (-0.2, -0.2), // Ensure the polygon is closed
-    ]); */
-
-    // Create geo::Polygon from LineString
-    
-
-    // Apply the difference operation using geo's BooleanOps
-    //let result_polygon = poly1.boolean_op(&poly2,  OpType::Union);
-
-    
-
-   let material_color =  Color::srgb(0.8, 0.7, 0.6); 
-
-   commands.spawn(PbrBundle {
-            mesh: meshes.add(mesh),
-            material: materials.add( material_color ),
-            ..Default::default()
-        }).insert(ClayTileComponent);
-
-
-    // Extrude the resulting 2D shape into a 3D mesh
-    /*for polygon in result_polygon {
-        let mesh = extrude_polygon_to_3d(&polygon , 0.2 );
-
-        let material_color =  Color::srgb(0.8, 0.7, 0.6); 
-
-
-        // Add the extruded mesh to the scene
-        commands.spawn(PbrBundle {
-            mesh: meshes.add(mesh),
-            material: materials.add( material_color ),
-            ..Default::default()
-        });
-    }*/
-}*/
-
+ 
 
 fn build_combined_polygon(operations: &Vec<ClayTileOperation>) -> Option<MultiPolygon> {
     if operations.is_empty() {
@@ -184,19 +118,7 @@ fn build_combined_polygon(operations: &Vec<ClayTileOperation>) -> Option<MultiPo
             // Add more operations as needed
         };
     }
-
-    /*let mut result_polygon = clay_tile_operation_to_polygon(&operations[0]);
-
-    for operation in &operations[1..] {
-        let poly = clay_tile_operation_to_polygon(operation);
-
-        result_polygon = match operation.operation_type {
-            OperationType::Union => result_polygon.union(&poly),
-            OperationType::Difference => result_polygon.difference(&poly),
-            // Add more operations as needed
-        };
-    }*/
-
+ 
 
   //  let result_polygon = poly1.boolean_op(&poly2,  OpType::Union);
 
@@ -206,7 +128,7 @@ fn build_combined_polygon(operations: &Vec<ClayTileOperation>) -> Option<MultiPo
 
 
 // Function to extrude a Polygon into a 3D mesh
-fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>, Vec<[usize; 3]>) {
+fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>, Vec<[usize; 3]>,Vec<[f32; 2]>) {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -245,7 +167,12 @@ fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>
         indices.push([ 2 * i + 1,1, 2 * (i + 1) + 1]);
     }
 
-    (vertices, indices)
+
+     // Generate UV coordinates
+    let uvs: Vec<[f32; 2]> = generate_uvs(&vertices);
+
+
+    (vertices, indices , uvs)
 }
 
 
