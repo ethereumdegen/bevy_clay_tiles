@@ -94,11 +94,11 @@ fn setup(
 
 
 
-         let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
+         /*let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
           config.line_width = 2.0;
            config.enabled = true;
             config.line_style = GizmoLineStyle::Solid;
-
+            */
 
           tile_edit_resource.set_selected_tool(
            Some( TileEditingTool::BuildTile(  BuildTileTool::RectangleTileBuild( RectangleTileBuildTool::PlaceOrigin  ) ))

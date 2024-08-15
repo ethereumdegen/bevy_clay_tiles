@@ -1,4 +1,4 @@
- 
+
 use bevy_mod_raycast::prelude::CursorRayPlugin;
 use crate::tile_edit::tile_edit_plugin;
 
@@ -45,8 +45,10 @@ impl Plugin for BevyClayTilesPlugin {
             Shader::from_wgsl
         );
         app.add_plugins(MaterialPlugin::<TileMaterialExtension>::default());
-        app.add_plugins(CursorRayPlugin);
-
+       
+       if !app.is_plugin_added::<CursorRayPlugin>() {
+            app.add_plugins(CursorRayPlugin);
+        }
 
         app
         .add_plugins(clay_tile_layer_plugin)        
