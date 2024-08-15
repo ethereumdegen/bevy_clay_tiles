@@ -1,4 +1,7 @@
-use bevy_clay_tiles::draw_grid_gizmo;
+ 
+use bevy_clay_tiles::tile_edit::RectangleTileBuildTool;
+use bevy_clay_tiles::tile_edit::BuildTileTool;
+use bevy_clay_tiles::tile_edit::{TileEditingResource,EditingTool as TileEditingTool};
 use bevy_clay_tiles::clay_tile_operation::ClayShapeType;
 use bevy_clay_tiles::clay_tile_operation::ClayTileOperation;
 use bevy_clay_tiles::clay_tile_operation::OperationType;
@@ -18,7 +21,7 @@ fn main() {
         .add_plugins(BevyClayTilesPlugin {})
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
-        .add_systems(Update, (rotate_camera, draw_grid_gizmo) )
+        .add_systems(Update, ( rotate_camera ) )
         .run();
 }
 
@@ -26,6 +29,9 @@ fn setup(
     mut commands: Commands,
 
      mut config_store: ResMut<GizmoConfigStore>,
+
+
+     mut tile_edit_resource: ResMut<TileEditingResource>,
      ) {
    
      commands.spawn(Camera3dBundle {
@@ -92,6 +98,11 @@ fn setup(
           config.line_width = 2.0;
            config.enabled = true;
             config.line_style = GizmoLineStyle::Solid;
+
+
+          tile_edit_resource.set_selected_tool(
+           Some( TileEditingTool::BuildTile(  BuildTileTool::RectangleTileBuild( RectangleTileBuildTool::PlaceOrigin  ) ))
+            );
 
      /* commands.spawn(
         TextBundle::from_section(

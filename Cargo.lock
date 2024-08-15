@@ -528,6 +528,7 @@ version = "0.14.1"
 dependencies = [
  "anyhow",
  "bevy 0.14.0",
+ "bevy_mod_raycast",
  "bevy_mod_sysfail",
  "futures-lite 1.13.0",
  "geo",
@@ -1030,6 +1031,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7ce4266293629a2d10459cc112dffe3b3e9229a4f2b8a4d20061b8dd53316d0"
 dependencies = [
  "glam 0.27.0",
+]
+
+[[package]]
+name = "bevy_mod_raycast"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9e4ff45885c4716771a9f55977d8ce69596502a5241da55bf608d7cd71a9cb3"
+dependencies = [
+ "bevy_app 0.14.0",
+ "bevy_asset",
+ "bevy_color",
+ "bevy_derive 0.14.0",
+ "bevy_ecs 0.14.0",
+ "bevy_gizmos",
+ "bevy_math 0.14.0",
+ "bevy_reflect 0.14.0",
+ "bevy_render",
+ "bevy_sprite",
+ "bevy_transform 0.14.0",
+ "bevy_utils 0.14.0",
+ "bevy_window 0.14.0",
+ "crossbeam-channel",
 ]
 
 [[package]]
