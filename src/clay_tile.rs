@@ -1,6 +1,6 @@
 
 
-
+use bevy::prelude::*;
 /*
 
 in the mesh-build step, 
@@ -15,3 +15,5 @@ you take all operations:
 //this is a single shape, a single 'operation'
 pub struct ClayTileBrush;
 
+#[derive(Component)]
+pub struct ClayTileComponent;

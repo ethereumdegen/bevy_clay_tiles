@@ -1,4 +1,8 @@
 
+use crate::clay_tile::ClayTileComponent;
+use crate::clay_tile_operation::OperationType;
+use crate::clay_tile_operation::ClayShapeType;
+use crate::clay_tile_operation::ClayTileOperation;
 use core::f32::consts::PI;
 use bevy::{prelude::* };
 use geo::{MultiPolygon, BooleanOps, CoordsIter, LineString, OpType, Polygon};
@@ -8,11 +12,28 @@ use bevy::render::render_resource::PrimitiveTopology::TriangleList;
 
 
 
+pub(crate) fn tile_edit_plugin(app: &mut App) {
+    app
+
+        .init_resource::<TileEditDataResource>()
+        ;
+}
+
+
+
+
+#[derive(Resource,Default)]
+pub struct TileEditDataResource {
+
+    tile_operations: Vec<ClayTileOperation>
+
+}
+
+
 pub fn draw_grid_gizmo(
   mut gizmos: Gizmos,
 
-   ){
-
+   ){ 
 
 
 	   gizmos.grid(
@@ -44,10 +65,23 @@ pub fn build_tile_layer(
 
 	// always ignore the FIRST brushes operation type. 
 
-
+  let operations = vec![
+        ClayTileOperation {
+            height_layer: 1,
+            operation_type: OperationType::Union,  //this doesnt matter
+            shape_type: ClayShapeType::Rectangle,
+            dimensions: [[-5, -5], [3, 2]],
+        },
+        ClayTileOperation {
+            height_layer: 1,
+            operation_type: OperationType::Union,
+            shape_type: ClayShapeType::Rectangle,
+            dimensions: [[-2, -2], [1, 2]],
+        },
+    ];
 
        // Convert Vec<(f64, f64)> to geo::LineString
-    let exterior1 = LineString::from(vec![
+   /* let exterior1 = LineString::from(vec![
         (-0.5, -0.5),
         (0.5, -0.5),
         (0.5, 0.5),
@@ -61,17 +95,19 @@ pub fn build_tile_layer(
         (0.2, 0.2),
         (-0.2, 0.2),
         (-0.2, -0.2), // Ensure the polygon is closed
-    ]);
+    ]); */
 
     // Create geo::Polygon from LineString
-    let poly1 = Polygon::new(exterior1, vec![]);
-    let poly2 = Polygon::new(exterior2, vec![]);
+    
 
     // Apply the difference operation using geo's BooleanOps
-    let result_polygon = poly1.boolean_op(&poly2,  OpType::Difference);
+    //let result_polygon = poly1.boolean_op(&poly2,  OpType::Union);
+
+    let result_polygon = build_combined_polygon(operations);
     
   //  result_polygon.exterior_coords_iter()
 
+  let Some(result_polygon) = result_polygon else {return} ;
 
    let (vertices, indices) = extrude_polygon_to_3d( &result_polygon , 0.2  );
 
@@ -95,7 +131,7 @@ pub fn build_tile_layer(
             mesh: meshes.add(mesh),
             material: materials.add( material_color ),
             ..Default::default()
-        });
+        }).insert(ClayTileComponent);
 
 
     // Extrude the resulting 2D shape into a 3D mesh
@@ -112,6 +148,45 @@ pub fn build_tile_layer(
             ..Default::default()
         });
     }*/
+}
+
+
+fn build_combined_polygon(operations: Vec<ClayTileOperation>) -> Option<MultiPolygon> {
+    if operations.is_empty() {
+        return None;
+    }
+
+    let first_polygon = &operations[0];
+
+    let mut result_polygon :MultiPolygon = first_polygon.to_exterior_polygon() .into();
+
+    for next_operation in &operations[1..] {
+        let poly:MultiPolygon = next_operation.to_exterior_polygon().into();
+
+        result_polygon = match next_operation.operation_type {
+            OperationType::Union => result_polygon.union(&poly),
+            OperationType::Difference => result_polygon.difference(&poly),
+            // Add more operations as needed
+        };
+    }
+
+    /*let mut result_polygon = clay_tile_operation_to_polygon(&operations[0]);
+
+    for operation in &operations[1..] {
+        let poly = clay_tile_operation_to_polygon(operation);
+
+        result_polygon = match operation.operation_type {
+            OperationType::Union => result_polygon.union(&poly),
+            OperationType::Difference => result_polygon.difference(&poly),
+            // Add more operations as needed
+        };
+    }*/
+
+
+  //  let result_polygon = poly1.boolean_op(&poly2,  OpType::Union);
+
+
+    Some( result_polygon )
 }
 
 
@@ -150,9 +225,9 @@ fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>
     // Closing the top and bottom (optional depending on the desired effect)
     for i in 1..(vertex_count - 1) {
         // Bottom
-        indices.push([0, 2 * i, 2 * (i + 1)]);
+        indices.push([ 2 * i,0, 2 * (i + 1)]);
         // Top
-        indices.push([1, 2 * i + 1, 2 * (i + 1) + 1]);
+        indices.push([ 2 * i + 1,1, 2 * (i + 1) + 1]);
     }
 
     (vertices, indices)
