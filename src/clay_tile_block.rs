@@ -3,6 +3,7 @@
 use crate::pre_mesh::extrude_polygon_to_3d;
 use crate::pre_mesh::point3_to_array_f32;
 use crate::pre_mesh::flatten_indices;
+use bevy::color::palettes::tailwind;
 use geo::{Point,LineString,Polygon}; 
 use crate::TileMaterialExtension;
  
@@ -35,9 +36,7 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 
     		(
                 build_tile_block_meshes,
-                add_needs_rebuild_to_block_mesh, 
-
-
+              
 
                 ).chain().run_if(any_with_component::<ClayTileBlock> )
 
@@ -45,28 +44,50 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 
     		)
        // .init_resource::<TileEditDataResource>()
+        
+
+
+        .add_systems(Update, 
+
+            (
+               
+
+                render_gizmos_for_clay_tile_block_builders, 
+
+                update_clay_tile_block_builders,
+
+
+
+                ).chain().run_if(any_with_component::<ClayTileBlockBuilder> )
+
+
+
+            )
+       // .init_resource::<TileEditDataResource>()
         ;
+
 }
 
 
 
 
-pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 
 
 
-//should spatially offset the layer at the appropriate height
 #[derive(Component)]
-pub struct ClayTileBlock {
+pub struct ClayTileBlockBuilder {
 
 
-    pub polygon_points: Vec<UVec2>
+    pub polygon_points: Vec<IVec2>
 
 
-} 
+}
 
 
-impl ClayTileBlock {
+
+
+impl ClayTileBlockBuilder {
+
 
 
     pub fn points_are_clockwise(&self) -> bool {
@@ -75,13 +96,13 @@ impl ClayTileBlock {
         let mut sum = 0.0;
 
         for i in 0..len - 1 {
-            let p1 = points[i];
-            let p2 = points[i + 1];
+            let p1_signed = points[i];
+            let p2_signed = points[i + 1];
 
             // Convert UVec2 to IVec2 to safely perform arithmetic operations
-            let p1_signed = IVec2::new(p1.x as i32, p1.y as i32);
-            let p2_signed = IVec2::new(p2.x as i32, p2.y as i32);
-
+           // let p1_signed = IVec2::new(p1.x , p1.y );
+        //  let p2_signed = IVec2::new(p2.x  , p2.y  );
+ 
             sum += (p2_signed.x - p1_signed.x) as f32 * (p2_signed.y + p1_signed.y) as f32;
         }
 
@@ -99,6 +120,10 @@ impl ClayTileBlock {
     pub fn is_complete(&self) -> bool {
 
 
+        if self.polygon_points.len() < 3 {
+            return false ;
+        }
+
         //first point is the same as last point 
         if let Some(first_point) = self.polygon_points.first() {
             if let Some(last_point) = self.polygon_points.last() {
@@ -108,8 +133,13 @@ impl ClayTileBlock {
         false
     }
 
-    pub fn to_linestring(&self) -> LineString {
- 
+
+     pub fn build(&self) -> Option<ClayTileBlock> {
+
+        if !self.is_complete(){
+
+            return None ;
+        }
 
         let polygon_points_cw = if self.points_are_clockwise() {
             self.polygon_points.clone()  // If CCW, use as is
@@ -119,11 +149,130 @@ impl ClayTileBlock {
             reversed_points
         };
 
-       let points: Vec<Point> =  polygon_points_cw.iter().map(|p| Point::new(p.x as f64, p.y as f64)).collect();
+
+        Some(
+            ClayTileBlock {
+
+                polygon_points: polygon_points_cw
+            }
+        )
+     }
+
+
+
+}
+
+
+
+fn render_gizmos_for_clay_tile_block_builders(
+    mut gizmos: Gizmos,
+    query: Query<&ClayTileBlockBuilder>,
+) {
+    for builder in query.iter() {
+        let points = &builder.polygon_points;
+
+        // Render gizmo points
+        for &point in points.iter() {
+            let position = Vec3::new(point.x as f32, 0.0, point.y as f32);
+
+            let radius = 0.1;
+            let rotation = Quat::IDENTITY;
+            let color : Color = tailwind::EMERALD_400.into() ;
+
+            gizmos.sphere(position, rotation, radius, color) ;
+           
+        }
+
+        // Render gizmo lines between points
+        for i in 0..points.len() - 1 {
+            let start = Vec3::new(points[i].x as f32, 0.0, points[i].y as f32);
+            let end = Vec3::new(points[i + 1].x as f32, 0.0, points[i + 1].y as f32);
+
+            let color:  Color = tailwind::AMBER_400.into();
+
+            gizmos.line(start, end, color)
+            
+        }
+    }
+}
+
+
+
+
+fn update_clay_tile_block_builders(
+    mut commands: Commands,
+    query: Query<(Entity, &ClayTileBlockBuilder, &Parent)>,
+) {
+    for (entity, builder, parent) in query.iter() {
+        if builder.is_complete() {
+            // Build the ClayTileBlock from the builder
+            if let Some(clay_tile_block) = builder.build() {
+                // Despawn the builder entity
+                commands.entity(entity).despawn_recursive();
+
+                // Spawn the new ClayTileBlock
+                commands.spawn(SpatialBundle::default())
+                .set_parent( parent.get()  )
+                .insert( clay_tile_block )
+                .insert( RebuildTileBlock );
+            }
+        }
+    }
+}
+
+
+
+
+
+
+pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
+
+
+
+//should spatially offset the layer at the appropriate height
+#[derive(Component)]
+pub struct ClayTileBlock {
+
+        //should always be clockwise ! 
+    pub polygon_points: Vec<IVec2>
+
+
+} 
+
+
+impl ClayTileBlock {
+
+
+
+    pub fn to_linestring(&self) -> LineString {
+ 
+
+        
+       let points: Vec<Point> =  self.polygon_points.iter().map(|p| Point::new(p.x as f64, p.y as f64)).collect();
         LineString::from(points)
 
 
     }
+
+
+    pub fn is_complete(&self) -> bool {
+
+
+
+        if self.polygon_points.len() < 3 {
+            return false ;
+        }
+        
+        //first point is the same as last point 
+        if let Some(first_point) = self.polygon_points.first() {
+            if let Some(last_point) = self.polygon_points.last() {
+                return first_point == last_point;
+            }
+        }
+        false
+    }
+
+
 
 
     pub fn to_exterior_polygon(&self)  -> Polygon {
@@ -183,7 +332,7 @@ pub struct ClayTileMesh;
 pub struct RebuildTileBlock  ;
 
 
-
+/*
 fn add_needs_rebuild_to_block_mesh(
 
     mut commands:Commands,
@@ -199,7 +348,7 @@ fn add_needs_rebuild_to_block_mesh(
         commands.entity(block_entity).insert( RebuildTileBlock );
     }
 
-}
+}*/
 
 
 pub fn build_tile_block_meshes(
@@ -221,6 +370,8 @@ pub fn build_tile_block_meshes(
 
         if !clay_tile_block.is_complete() {
             // not complete so we skip 
+
+              warn!("Tile segments are incomplete");
             continue;
         }
 
@@ -229,7 +380,10 @@ pub fn build_tile_block_meshes(
 		commands.entity(block_entity).remove::<RebuildTileBlock>();
 
 		
-		let Some((clay_tiles_root,clay_tiles_config)) = tile_root_query.get(parent.get()).ok() else {continue};
+		let Some((clay_tiles_root,clay_tiles_config)) = tile_root_query.get(parent.get()).ok() else {
+            warn!("Invalid tile parent");
+            continue
+        };
 
 		//let tile_diffuse_texture = clay_tiles_root.terrain_data_loaded
 		let tile_diffuse_texture = clay_tiles_root.get_diffuse_texture_image().clone();

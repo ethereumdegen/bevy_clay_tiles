@@ -1,5 +1,7 @@
 
+use crate::clay_tile_block::ClayTileBlockBuilder;
 use crate::clay_tile::ClayTileComponent;
+use crate::tiles::ClayTilesRoot;
  
 use core::f32::consts::PI;
 use bevy::{prelude::* };
@@ -23,8 +25,8 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
             (
                 render_tile_build_grid,
                 listen_for_input_events,
-                handle_grid_interaction_events,
-
+                handle_polygon_tile_build_events,
+                handle_rectangle_tile_build_events, 
 
                 ).chain()
 
@@ -204,7 +206,7 @@ fn listen_for_input_events (
      }
 }
 
-
+/*
 fn handle_grid_interaction_events(  
 
     mut evt_reader: EventReader<BuildGridInteractionEvent>
@@ -220,4 +222,115 @@ fn handle_grid_interaction_events(
 
 
 
+}
+*/
+
+
+fn handle_polygon_tile_build_events(
+    mut commands: Commands,
+    mut evt_reader: EventReader<BuildGridInteractionEvent>,
+    tile_edit_resource: Res<TileEditingResource>,
+    mut builder_query: Query<&mut ClayTileBlockBuilder>,
+
+    root_query: Query<Entity, With< ClayTilesRoot>>,
+) {
+
+    let Some(root_entity) = root_query.get_single().ok() else {return};
+
+    if let Some(EditingTool::BuildTile(BuildTileTool::PolygonTileBuild)) = &tile_edit_resource.selected_tool {
+        for evt in evt_reader.read() {
+            match evt.interaction_type {
+                GridInteractionType::Press => {
+
+                    let position = IVec2::new(
+                        evt.coordinates.x.round() as i32,
+                        evt.coordinates.y.round() as i32,
+                    );
+
+
+                     
+                    
+                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                        // Add the point to the existing builder
+                        builder.polygon_points.push(position);
+                    } else {
+                        // No builder exists, create a new one
+                        commands.spawn((
+                             SpatialBundle::default(),
+                            ClayTileBlockBuilder {
+                                polygon_points: vec![position],
+                            }
+                            // Additional components can be added here
+                        )).set_parent( root_entity );
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+fn handle_rectangle_tile_build_events(
+    mut commands: Commands,
+    mut evt_reader: EventReader<BuildGridInteractionEvent>,
+    tile_edit_resource: Res<TileEditingResource>,
+    mut builder_query: Query<&mut ClayTileBlockBuilder>,
+    root_query: Query<Entity, With< ClayTilesRoot>>,
+) {
+
+    let Some(root_entity) = root_query.get_single().ok() else {return};
+
+
+    if let Some(EditingTool::BuildTile(BuildTileTool::RectangleTileBuild)) = &tile_edit_resource.selected_tool {
+        for evt in evt_reader.read() {
+            match evt.interaction_type {
+                GridInteractionType::Press => {
+                    let position = IVec2::new(
+                        evt.coordinates.x.round() as i32,
+                        evt.coordinates.y.round() as i32,
+                    );
+
+                    
+                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                        // Replace the existing point with the new start point
+                        builder.polygon_points.clear();
+                        builder.polygon_points.push(position);
+                    } else {
+                        // No builder exists, create a new one with the first point
+                        commands.spawn((
+                            SpatialBundle::default(),
+                            ClayTileBlockBuilder {
+                                polygon_points: vec![position],
+                            },
+                            // Additional components can be added here
+                        )).set_parent( root_entity );
+                    }
+                }
+                GridInteractionType::Release => {
+                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                        if let Some(&start_point) = builder.polygon_points.first() {
+                            
+                            let end_point = IVec2::new(
+                                evt.coordinates.x.round() as i32,
+                                evt.coordinates.y.round() as i32,
+                            );
+
+                            // Calculate the other two corners of the rectangle
+                            let top_right = IVec2::new(end_point.x, start_point.y);
+                            let bottom_left = IVec2::new(start_point.x, end_point.y);
+
+                            // Complete the rectangle by adding the other points
+                            builder.polygon_points.push(top_right);
+                            builder.polygon_points.push(end_point);
+                            builder.polygon_points.push(bottom_left);
+                            builder.polygon_points.push(start_point); // Close the rectangle
+
+                            info!("{} {}", start_point, end_point);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
  
  
   
+use bevy_clay_tiles::clay_tile_block::ClayTileBlockBuilder;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlock;
 use bevy_clay_tiles::tile_edit::BuildTileTool;
 use bevy_clay_tiles::tile_edit::{TileEditingResource,EditingTool as TileEditingTool};
@@ -75,12 +76,12 @@ fn setup(
             //they need to be in this order ! 
 
         let polygon_points = vec![
-            UVec2::new(0, 0),  
-            UVec2::new(2, 0), 
-            UVec2::new(2, 2),  
-            UVec2::new(0, 2),  
+            IVec2::new(0, 0),  
+            IVec2::new(2, 0), 
+            IVec2::new(2, 2),  
+            IVec2::new(0, 2),  
            //  UVec2::new(0, 4),  
-            UVec2::new(0, 0), // Closing the loop (same as the first point)
+            IVec2::new(0, 0), // Closing the loop (same as the first point)
         ];
 
 
@@ -94,7 +95,7 @@ fn setup(
 
         let clay_tile_layer = commands
         .spawn(SpatialBundle::default())
-        .insert(ClayTileBlock {
+        .insert(ClayTileBlockBuilder {
 
             polygon_points
         } )
