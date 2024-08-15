@@ -154,14 +154,16 @@ fn fragment(
     //we mix the normal with our sample so shadows are affected by the normal map ! 
     let normal_mixed = mix( normalize( mesh.world_normal ) , normalize( tangent ) , 0.7 );
 
-     let TBN = calculate_tbn_mikktspace(normalize( normal_mixed ), vec4(tangent,1.0 )  ) ;  //for anistropy ??
+     let TBN = calculate_tbn_mikktspace(normalize(normal_mixed ), vec4(tangent,1.0 )  ) ;  //for anistropy ??
 
  
 
-    let Nt = textureSampleBias(pbr_bindings::normal_map_texture, pbr_bindings::normal_map_sampler, mesh.uv, view.mip_bias).rgb;
+    let Nt = textureSampleBias(
+        pbr_bindings::normal_map_texture,
+         pbr_bindings::normal_map_sampler, mesh.uv, view.mip_bias).rgb;
 
     
-
+ 
     pbr_input.N =  apply_normal_mapping(
         pbr_input.material.flags,
        
@@ -172,7 +174,7 @@ fn fragment(
         
         Nt
     );
-
+ 
 
     pbr_input.V =  calculate_view(mesh.world_position, pbr_input.is_orthographic);
 
@@ -182,10 +184,7 @@ fn fragment(
     
     // apply lighting
     pbr_out.color = apply_pbr_lighting(pbr_input);
-    // we can optionally modify the lit color before post-processing is applied
-    // out.color = out.color;
-    // apply in-shader post processing (fog, alpha-premultiply, and also tonemapping, debanding if the camera is non-hdr)
-    // note this does not include fullscreen postprocessing effects like bloom.
+    
     pbr_out.color = main_pass_post_lighting_processing(pbr_input, pbr_out.color);
 
     pbr_out.color=  tone_mapping(pbr_out.color, view.color_grading);
@@ -196,7 +195,7 @@ fn fragment(
 
 
    
-    let vertex_world_psn = mesh.world_position.xz; // Assuming the vertex position is in world space
+   // let vertex_world_psn = mesh.world_position.xz; // Assuming the vertex position is in world space
 
    // let tool_coordinates = tool_preview_uniforms.tool_coordinates;
    // let tool_radius = tool_preview_uniforms.tool_radius;
@@ -206,7 +205,7 @@ fn fragment(
 
   //  let within_tool_radius = f32(distance <= tool_radius);
 
-    let final_color = vec4(blended_color.rgb, 1.0);
+    let final_color = vec4( blended_color.rgb, 1.0);
           
 
      

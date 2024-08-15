@@ -42,7 +42,7 @@ fn setup(
       // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            shadows_enabled: true,
+            shadows_enabled: false,
             ..default()
         },
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
