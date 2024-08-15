@@ -74,15 +74,26 @@ pub fn build_mesh_from_operations(
      // Convert vertices to the expected format for Bevy
     let vertex_positions: Vec<[f32; 3]> = vertices.iter().map(point3_to_array_f32).collect();
 
+ 
+    // Generate UV coordinates
+    let uvs: Vec<[f32; 2]> = generate_uvs(&vertices);
+
+
     // Flatten indices for Bevy
     let flattened_indices = flatten_indices(&indices);
 
-   let mut mesh = Mesh::new(TriangleList, RenderAssetUsages::default());
+    let mut mesh = Mesh::new(TriangleList, RenderAssetUsages::default());
 
     mesh.insert_attribute(
         Mesh::ATTRIBUTE_POSITION,
         vertex_positions,
     );
+
+    // Insert the UV coordinates
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
+
+
     mesh.insert_indices(Indices::U32(flattened_indices));
 
 
@@ -235,6 +246,11 @@ fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>
     }
 
     (vertices, indices)
+}
+
+
+fn generate_uvs(vertices: &Vec<[f64; 3]>) -> Vec<[f32; 2]> {
+    vertices.iter().map(|&[x, _, z]| [x as f32, z as f32]).collect()
 }
 
 fn point3_to_array_f32(point: &[f64; 3]) -> [f32; 3] {
