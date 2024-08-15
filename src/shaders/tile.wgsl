@@ -122,7 +122,7 @@ fn fragment(
 
     let blended_color = color_from_diffuse_texture  ;
     var blended_normal = normal_from_texture  ;
-     blended_normal = normalize(blended_normal); 
+     blended_normal =  normalize(blended_color); // FOR NOW  // normalize(blended_normal); 
                     
    let blended_normal_vec3 = vec3<f32>( blended_normal.r, blended_normal.g, blended_normal.b );         
    
@@ -206,7 +206,7 @@ fn fragment(
 
   //  let within_tool_radius = f32(distance <= tool_radius);
 
-    let final_color = vec4(pbr_out.color.rgb, 1.0);
+    let final_color = vec4(blended_color.rgb, 1.0);
           
 
      

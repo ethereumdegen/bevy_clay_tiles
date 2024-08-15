@@ -1,8 +1,6 @@
 
 use crate::clay_tile::ClayTileComponent;
-use crate::clay_tile_operation::OperationType;
-use crate::clay_tile_operation::ClayShapeType;
-use crate::clay_tile_operation::ClayTileOperation;
+ 
 use core::f32::consts::PI;
 use bevy::{prelude::* };
 use geo::{MultiPolygon, BooleanOps, CoordsIter, LineString, OpType, Polygon};
@@ -145,7 +143,7 @@ pub struct TileBuildGridData {
            gizmos.grid(
                 grid_position,
                 Quat::from_rotation_x( PI / 2.),
-                UVec2::splat(1000),
+                UVec2::splat(100),
                 Vec2::splat(1.),
                 // Light gray
                 LinearRgba::gray(0.95),

@@ -1,12 +1,11 @@
  
  
- 
+  
+use bevy_clay_tiles::clay_tile_block::ClayTileBlock;
 use bevy_clay_tiles::tile_edit::BuildTileTool;
 use bevy_clay_tiles::tile_edit::{TileEditingResource,EditingTool as TileEditingTool};
-use bevy_clay_tiles::clay_tile_operation::ClayShapeType;
-use bevy_clay_tiles::clay_tile_operation::ClayTileOperation;
-use bevy_clay_tiles::clay_tile_operation::OperationType;
-use bevy_clay_tiles::clay_tile_layer::{ClayTileLayer,ClayTileLayerBuildData};
+ 
+//use bevy_clay_tiles::clay_tile_layer::{ClayTileLayer,ClayTileLayerBuildData};
 use bevy_clay_tiles::tiles_config::ClayTilesConfig;
 use bevy_clay_tiles::tiles::ClayTilesRoot;
   
@@ -29,7 +28,7 @@ fn main() {
 fn setup( 
     mut commands: Commands,
 
-     mut config_store: ResMut<GizmoConfigStore>,
+    // mut config_store: ResMut<GizmoConfigStore>,
 
 
      mut tile_edit_resource: ResMut<TileEditingResource>,
@@ -58,20 +57,31 @@ fn setup(
 
 
 
-        let tile_operations = vec![
-        ClayTileOperation {
-            height_layer: 1,
-            operation_type: OperationType::Union,  //this doesnt matter
-            shape_type: ClayShapeType::Rectangle,
-            dimensions: [[-5, -5], [3, 2]],
-        },
-        ClayTileOperation {
-            height_layer: 1,
-            operation_type: OperationType::Union,
-            shape_type: ClayShapeType::Rectangle,
-            dimensions: [[-2, -2], [1, 2]],
-        },
-    ];
+        /*let tile_operations = vec![
+            ClayTileOperation {
+                height_layer: 1,
+                operation_type: OperationType::Union,  //this doesnt matter
+                shape_type: ClayShapeType::Rectangle,
+                dimensions: [[-5, -5], [3, 2]],
+            },
+            ClayTileOperation {
+                height_layer: 1,
+                operation_type: OperationType::Union,
+                shape_type: ClayShapeType::Rectangle,
+                dimensions: [[-2, -2], [1, 2]],
+            },
+        ];*/
+
+            //they need to be in this order ! 
+
+        let polygon_points = vec![
+            UVec2::new(0, 0),  
+            UVec2::new(2, 0), 
+            UVec2::new(2, 2),  
+            UVec2::new(0, 2),  
+           //  UVec2::new(0, 4),  
+            UVec2::new(0, 0), // Closing the loop (same as the first point)
+        ];
 
 
         let clay_tiles_root =  commands
@@ -84,8 +94,11 @@ fn setup(
 
         let clay_tile_layer = commands
         .spawn(SpatialBundle::default())
-        .insert(ClayTileLayer)
-        .insert( ClayTileLayerBuildData {tile_operations} )
+        .insert(ClayTileBlock {
+
+            polygon_points
+        } )
+        
         .id();
 
 
