@@ -89,23 +89,22 @@ pub enum EditingTool {
 
 #[derive(Debug, Clone)]
 pub enum BuildTileTool { 
-    RectangleTileBuild( RectangleTileBuildTool ), 
-    PolygonTileBuild( PolygonTileBuildTool ),   
+    RectangleTileBuild , 
+    PolygonTileBuild ,   
 }
 
 
+//this is determined by other statefulness
 #[derive(Debug, Clone)]
-pub enum RectangleTileBuildTool { 
+pub enum RectangleTileBuildToolState { 
     PlaceOrigin, // monitors for on click ... spawns an entity 
     PlaceEndpoint(Entity), //monitors for on release 
 }
+ 
 
-
-
-
-
+//this is determined by other statefulness
 #[derive(Debug, Clone)]
-pub enum PolygonTileBuildTool { 
+pub enum PolygonTileBuildToolState { 
     PlaceOrigin, // monitors for on click ... spawns an entity 
     AddLineSegment(Entity), //monitors for one to be added which is the same as the origin 
 }
