@@ -10,6 +10,14 @@ use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology::TriangleList;
 
 
+/*
+
+First need to do the sides - they are easy... i know the top and bottom vertices so 
+i just need to make the triangles that connect them (make a fn that makes 2 triangles from a quad?)
+
+Then need to do the top and bottom.  This is trickier as I will need to tesselate the top into triangles 
+
+*/
 
 pub(crate) fn tile_edit_plugin(app: &mut App) {
     app
@@ -129,19 +137,22 @@ fn build_combined_polygon(operations: &Vec<ClayTileOperation>) -> Option<MultiPo
 // Function to extrude a Polygon into a 3D mesh
 pub fn extrude_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> (Vec<[f64; 3]>, Vec<[usize; 3]>,Vec<[f32; 2]>) {
     let mut vertices = Vec::new();
-    let mut indices = Vec::new();
+    let mut indices = Vec::new();  //these are like the 'face' definitions (tris)
 
-    let vertex_count = polygon.exterior_coords_iter().count().clone();
+    let shape_2d_vertex_count = polygon.exterior_coords_iter().count().clone();
 
     // Iterate over the exterior of the polygon
     let exterior_coords = polygon.exterior_coords_iter() ;
 
+    let mut bottom_vertices = Vec::new();
+    let mut top_vertices = Vec::new();
+
     // Create bottom and top vertices
     for coord in exterior_coords {
         // Bottom vertices (y = 0)
-        vertices.push( [coord.x, 0.0, coord.y] );
+        bottom_vertices.push( [coord.x, 0.0, coord.y] );
         // Top vertices (y = height)
-        vertices.push( [coord.x, height, coord.y ]);
+        top_vertices.push( [coord.x, height, coord.y ]);
     }
 
     
