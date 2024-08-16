@@ -1,6 +1,18 @@
  
     
-1.  When this plugin is put into Edit Mode, show a grid gizmo 
+
+
+
+2.  Need the built mesh to be originned at the origin of the builder that built it   (LATER) 
+
+3. Need to be able to use the 'modify height' tool to select a built tile and stretch its height .. or bevel. 
+
+
+4. need to make the tile_types_config actually affect the tiles texture (modify it w a tool ?) (goes into shader )
+
+5. need to be able to save and load the tiles  (in zones ? )
+
+6. need them to gen collision (by attaching some comp ? )
 
 
 ### SAVE FILE 
@@ -8,9 +20,11 @@
 
 - In each HeightLayer, there is an array of 'TileLayers' - one for each Tile Type .
 
-Each TileTypeLayer has a specific tile type.  It has 'draw data' which is an array of 'brushes'.  All of the brushes are applied together for this layer and then extruded into a 3d model .   
+ 
 
-use i_overlay. 
+
+
+
 
 
 
@@ -27,5 +41,6 @@ use i_overlay.
 
 
 ## NOTES 
+ 
 
-- floor tiles should extrude DOWNwards ( 0.25 ? )
+
