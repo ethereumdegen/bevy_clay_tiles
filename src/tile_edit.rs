@@ -4,6 +4,7 @@ use crate::clay_tile::ClayTileComponent;
 use crate::tiles::ClayTilesRoot;
  
 use core::f32::consts::PI;
+use bevy::color::palettes::tailwind;
 use bevy::{prelude::* };
 use geo::{MultiPolygon, BooleanOps, CoordsIter, LineString, OpType, Polygon};
 use bevy::render::mesh::Indices;
@@ -23,7 +24,9 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
         .add_systems(Update, 
 
             (
+                update_build_grid_horizontal_offset,
                 render_tile_build_grid,
+                render_cursor_gizmo,
                 listen_for_input_events,
                 handle_polygon_tile_build_events,
                 handle_rectangle_tile_build_events, 
@@ -52,14 +55,17 @@ pub struct BuildGridInteractionEvent {
 #[derive(Clone,Debug)]
 pub enum GridInteractionType{
     Press,
-    Release
+    Release,
+     Cancel
 
 }
 
 #[derive(Resource,Default)]
 pub struct TileEditingResource{ 
     selected_tool: Option<EditingTool>,
-    build_grid_data: TileBuildGridData   // gizmo.. 
+    build_grid_data: TileBuildGridData  ,  
+
+    selected_tile_type: u32 
 }
 
 
@@ -70,10 +76,34 @@ impl TileEditingResource {
         self.selected_tool.is_some()
     }
 
+    pub fn set_build_grid_horizontal_offset( &mut self, offset: Vec2 ){
+
+        self.build_grid_data.horizontal_offset = offset; 
+    }
+
+    pub fn set_build_tile_type(&mut self, tile_type: u32){
+
+
+        self.selected_tile_type = tile_type;
+    }
+
+
+    pub fn get_build_tile_type(& self) -> u32{
+ 
+
+        self.selected_tile_type  
+    }
+
     pub fn set_build_layer_height(&mut self, height: u32 ){
 
 
         self.build_grid_data.height_offset = height;
+    }
+
+    pub fn get_build_layer_height(& self ) -> u32{
+
+
+        self.build_grid_data.height_offset   
     }
 
     pub fn set_selected_tool(&mut self, tool_type: Option<EditingTool>) {
@@ -89,7 +119,7 @@ impl TileEditingResource {
 #[derive(Debug, Clone)]
 pub enum EditingTool {
     BuildTile( BuildTileTool ),
-    ModifyTileHeight(Entity),     
+    ModifyTile (ModifyTileTool)    
 }
 
 
@@ -100,7 +130,18 @@ pub enum BuildTileTool {
 }
 
 
+
+#[derive(Debug, Clone)]
+pub enum ModifyTileTool { 
+    ModifyTileHeight , 
+    ModifyTileBevel ,   
+    ModifyTileType, 
+}
+
+
+
 //this is determined by other statefulness
+/*
 #[derive(Debug, Clone)]
 pub enum RectangleTileBuildToolState { 
     PlaceOrigin, // monitors for on click ... spawns an entity 
@@ -114,11 +155,14 @@ pub enum PolygonTileBuildToolState {
     PlaceOrigin, // monitors for on click ... spawns an entity 
     AddLineSegment(Entity), //monitors for one to be added which is the same as the origin 
 }
+*/
 
 #[derive(Debug, Clone, Default)]
 pub struct TileBuildGridData {
 
     height_offset: u32,
+
+    horizontal_offset: Vec2, 
    // grid_enabled: bool 
 
 }
@@ -132,14 +176,17 @@ pub struct TileBuildGridData {
       mut gizmos: Gizmos,
   ){
 
-
+     let position_offset  = &tile_edit_resource.build_grid_data.horizontal_offset.xy();
      let height_offset  = &tile_edit_resource.build_grid_data.height_offset;
      let grid_enabled = &tile_edit_resource.get_build_grid_enabled();
+
+     let x_offset = position_offset.x;
+     let z_offset = position_offset.y;
 
         if *grid_enabled {
 
             //bizarre but.. yeah lol . due to quat rot 
-          let grid_position = Vec3::new(0.0,0.0, -1.0 *  *height_offset as f32);
+          let grid_position = Vec3::new(x_offset,z_offset, -1.0 *  *height_offset as f32);
 
 
            gizmos.grid(
@@ -166,7 +213,6 @@ fn listen_for_input_events (
 
    mut build_grid_interaction_evt_writer: EventWriter<BuildGridInteractionEvent>,
 
- 
   
 ) {
 
@@ -201,10 +247,119 @@ fn listen_for_input_events (
                         interaction_type: GridInteractionType::Release
                     });
                 }
+
+
+                 if mouse_input.just_pressed(MouseButton::Right) {
+
+                    build_grid_interaction_evt_writer.send(BuildGridInteractionEvent {
+                        coordinates: Vec2::new(point_intersecting_build_grid.x, point_intersecting_build_grid.z),
+                        interaction_type: GridInteractionType::Cancel
+                    });
+                }
+
+
             }
         }
      }
 }
+
+
+
+
+fn render_cursor_gizmo (
+    tile_edit_resource: Res<TileEditingResource>,
+ 
+
+   cursor_ray: Res<CursorRay>,
+
+   mut gizmos: Gizmos,
+) {
+
+
+     let build_grid_height  =   tile_edit_resource.build_grid_data.height_offset as f32;
+     let grid_enabled =  tile_edit_resource.get_build_grid_enabled();
+
+
+     if  grid_enabled {
+ //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
+
+        if let Some(cursor_ray) = **cursor_ray {
+            let origin = &cursor_ray.origin; 
+            let direction = &cursor_ray.direction;
+
+
+           // let point_intersecting_build_grid = ;
+            if direction.y.abs() > 1e-6 {  // Ensure we're not dividing by zero
+                let t = (build_grid_height - origin.y) / direction.y;
+                let point_intersecting_build_grid = *origin + *direction * t;
+                    
+
+
+                    let rounded_position = IVec2::new(
+                        point_intersecting_build_grid.x.round() as i32,
+                        point_intersecting_build_grid.z.round() as i32,
+                    ); 
+
+                    let position = Vec3::new(rounded_position.x as f32, 1.0 * build_grid_height, rounded_position.y as f32);
+
+                   
+                    let radius = 0.1;
+                    let rotation = Quat::IDENTITY;
+                    let color = tailwind::AMBER_400  ;
+
+                    gizmos.sphere(position, rotation, radius, color) ;
+
+                  
+                
+            }
+        }
+     }
+}
+
+
+fn update_build_grid_horizontal_offset (
+    mut tile_edit_resource: ResMut<TileEditingResource>,
+ 
+
+   cursor_ray: Res<CursorRay>,
+
+//   mut gizmos: Gizmos,
+) {
+
+
+     let build_grid_height  =   tile_edit_resource.build_grid_data.height_offset as f32;
+     let grid_enabled =  tile_edit_resource.get_build_grid_enabled();
+
+     if  grid_enabled {
+ //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
+
+        if let Some(cursor_ray) = **cursor_ray {
+            let origin = &cursor_ray.origin; 
+            let direction = &cursor_ray.direction;
+
+
+           // let point_intersecting_build_grid = ;
+            if direction.y.abs() > 1e-6 {  // Ensure we're not dividing by zero
+                let t = (build_grid_height - origin.y) / direction.y;
+                let point_intersecting_build_grid = *origin + *direction * t;
+                    
+
+
+                    let rounded_position = IVec2::new(
+                        point_intersecting_build_grid.x.round() as i32,
+                        point_intersecting_build_grid.z.round() as i32,
+                    ); 
+
+                   // let position = Vec3::new(rounded_position.x as f32, 0.0, rounded_position.y as f32);
+                    tile_edit_resource.set_build_grid_horizontal_offset( Vec2::new(rounded_position.x as f32,  rounded_position.y as f32 )) ;
+                
+                  
+                
+            }
+        }
+     }
+}
+
 
 /*
 fn handle_grid_interaction_events(  
@@ -245,24 +400,47 @@ fn handle_polygon_tile_build_events(
                     let position = IVec2::new(
                         evt.coordinates.x.round() as i32,
                         evt.coordinates.y.round() as i32,
-                    );
-
-
-                     
+                    ); 
                     
                     if let Ok(mut builder) = builder_query.get_single_mut() {
                         // Add the point to the existing builder
                         builder.polygon_points.push(position);
                     } else {
+
+                        let height_level = tile_edit_resource.get_build_layer_height() ;
+                        let tile_type_index = tile_edit_resource.get_build_tile_type();
+
                         // No builder exists, create a new one
                         commands.spawn((
                              SpatialBundle::default(),
-                            ClayTileBlockBuilder {
+                              ClayTileBlockBuilder {
                                 polygon_points: vec![position],
+
+                                height_level,
+                                tile_type_index,
+
                             }
                             // Additional components can be added here
                         )).set_parent( root_entity );
                     }
+                }
+
+                GridInteractionType::Cancel => {
+
+
+                    let position = IVec2::new(
+                        evt.coordinates.x.round() as i32,
+                        evt.coordinates.y.round() as i32,
+                    ); 
+                    
+                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                        // Add the point to the existing builder
+                        builder.polygon_points.clear();
+                        builder.polygon_points.push(position);
+                    }  
+
+
+
                 }
                 _ => {}
             }
@@ -296,11 +474,17 @@ fn handle_rectangle_tile_build_events(
                         builder.polygon_points.clear();
                         builder.polygon_points.push(position);
                     } else {
+
+                        let height_level = tile_edit_resource.get_build_layer_height() ;
+                        let tile_type_index = tile_edit_resource.get_build_tile_type();
+
                         // No builder exists, create a new one with the first point
                         commands.spawn((
                             SpatialBundle::default(),
                             ClayTileBlockBuilder {
                                 polygon_points: vec![position],
+                                height_level,
+                                tile_type_index
                             },
                             // Additional components can be added here
                         )).set_parent( root_entity );

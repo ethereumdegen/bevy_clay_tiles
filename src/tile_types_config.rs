@@ -14,33 +14,30 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-#[derive(Component, Deserialize, Serialize, Clone)]
-pub struct ClayTilesConfig {
+#[derive(  Deserialize, Serialize, Clone)]
+pub struct TileTypesConfig {
+    
+    tile_types: Vec<TileTypeConfig>
     
    
-    pub texture_image_sections: u32,
-    pub diffuse_folder_path: PathBuf,
+}
+
+
+
+#[derive(  Deserialize, Serialize, Clone)]
+pub struct TileTypeConfig {
+    
+   name: String,
+   diffuse_uv_expansion_factor: f32, 
+
+    
    
 }
-
-impl Default for ClayTilesConfig {
-    fn default() -> Self {
-        Self {
-           
-            
-            texture_image_sections: 4, 
-            diffuse_folder_path: "diffuse/".into(),
-            
-         //   collider_data_folder_path: "collider/".into(),
-        }
-    }
-}
+ 
+/*
+impl TileTypesConfig {
 
 
-
-//this may break in a production build ? 
-
-impl ClayTilesConfig {
     pub fn load_from_file(file_path: &str) -> Result<Self, ron::Error> {
         let mut file = File::open(file_path).expect("Failed to open file");
         let mut contents = String::new();
@@ -51,3 +48,4 @@ impl ClayTilesConfig {
 
     
 }
+*/

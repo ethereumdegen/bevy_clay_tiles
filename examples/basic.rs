@@ -97,7 +97,9 @@ fn setup(
         .spawn(SpatialBundle::default())
         .insert(ClayTileBlockBuilder {
 
-            polygon_points
+            polygon_points,
+
+            ..default()
         } )
         
         .id();

@@ -1,5 +1,6 @@
 
 
+use crate::tile_edit::TileEditingResource;
 use crate::pre_mesh::extrude_polygon_to_3d;
 use crate::pre_mesh::point3_to_array_f32;
 use crate::pre_mesh::flatten_indices;
@@ -78,9 +79,27 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 pub struct ClayTileBlockBuilder {
 
 
-    pub polygon_points: Vec<IVec2>
+    pub polygon_points: Vec<IVec2>,
+
+     pub height_level: u32, 
+     pub tile_type_index: u32 
 
 
+}
+
+impl Default for ClayTileBlockBuilder {
+
+
+
+fn default() -> Self {
+
+    Self{
+        polygon_points: Vec::new(),
+        height_level: 0,
+        tile_type_index: 0
+    }
+
+ }
 }
 
 
@@ -153,7 +172,12 @@ impl ClayTileBlockBuilder {
         Some(
             ClayTileBlock {
 
-                polygon_points: polygon_points_ccw
+                polygon_points: polygon_points_ccw,
+                height_level: self.height_level.clone(), 
+                tile_type_index: self.tile_type_index.clone() ,
+
+
+                ..default()
             }
         )
      }
@@ -167,13 +191,19 @@ impl ClayTileBlockBuilder {
 fn render_gizmos_for_clay_tile_block_builders(
     mut gizmos: Gizmos,
     query: Query<&ClayTileBlockBuilder>,
+
+      tile_edit_resource: Res<TileEditingResource>,
+
 ) {
+
+   let height_offset  = tile_edit_resource.get_build_layer_height() as f32;
+
     for builder in query.iter() {
         let points = &builder.polygon_points;
 
         // Render gizmo points
         for &point in points.iter() {
-            let position = Vec3::new(point.x as f32, 0.0, point.y as f32);
+            let position = Vec3::new(point.x as f32, 1.0 * height_offset, point.y as f32);
 
             let radius = 0.1;
             let rotation = Quat::IDENTITY;
@@ -185,8 +215,8 @@ fn render_gizmos_for_clay_tile_block_builders(
 
         // Render gizmo lines between points
         for i in 0..points.len() - 1 {
-            let start = Vec3::new(points[i].x as f32, 0.0, points[i].y as f32);
-            let end = Vec3::new(points[i + 1].x as f32, 0.0, points[i + 1].y as f32);
+            let start = Vec3::new(points[i].x as f32, 1.0 * height_offset, points[i].y as f32);
+            let end = Vec3::new(points[i + 1].x as f32, 1.0 * height_offset, points[i + 1].y as f32);
 
             let color:  Color = tailwind::AMBER_400.into();
 
@@ -234,10 +264,35 @@ pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 pub struct ClayTileBlock {
 
         //should always be counterclockwise ! 
-    pub polygon_points: Vec<IVec2>
+    pub polygon_points: Vec<IVec2>,
 
+    pub mesh_height: f32,  // 0.2 default
+
+    pub mesh_bevel_factor: f32, //0  default 
+
+    pub height_level: u32, 
+
+    pub uv_expansion_factor: f32 ,
+
+    pub tile_type_index: u32,  
 
 } 
+
+impl Default for ClayTileBlock { 
+ 
+    fn default() -> Self {  
+
+        Self {
+            polygon_points: Vec::new(),
+            mesh_height: 0.2,
+            mesh_bevel_factor: 0.0,
+            height_level : 0 ,
+            uv_expansion_factor: 1.0,
+            tile_type_index: 0 
+        }
+     }
+
+}
 
 
 impl ClayTileBlock {
@@ -287,12 +342,16 @@ impl ClayTileBlock {
        let  polygon = self.to_exterior_polygon();
     
       //  result_polygon.exterior_coords_iter()
+
+
+       let mesh_height_scale = & self.mesh_height ;
  
 
-       let (vertices, indices, uvs) = extrude_polygon_to_3d(  &polygon .into() , 0.2  ) ?;
+       let (vertices, indices, uvs, normals) = extrude_polygon_to_3d(  &polygon .into() , *mesh_height_scale as f64  ) ?;
 
          // Convert vertices to the expected format for Bevy
         let vertex_positions: Vec<[f32; 3]> = vertices.iter().map(point3_to_array_f32).collect();
+        let vertex_normals: Vec<[f32; 3]> = normals.iter().map(point3_to_array_f32).collect();
 
      
        
@@ -305,6 +364,11 @@ impl ClayTileBlock {
         mesh.insert_attribute(
             Mesh::ATTRIBUTE_POSITION,
             vertex_positions,
+        );
+
+        mesh.insert_attribute(
+            Mesh::ATTRIBUTE_NORMAL ,
+            vertex_normals,
         );
 
         // Insert the UV coordinates
@@ -353,8 +417,8 @@ fn add_needs_rebuild_to_block_mesh(
 
 pub fn build_tile_block_meshes(
 	mut commands:Commands,
-	clay_tile_layer_query: Query<
-	 (Entity, & ClayTileBlock,  &Parent ), With<RebuildTileBlock>
+	mut clay_tile_layer_query: Query<
+	 (Entity, & ClayTileBlock,  &Parent, &mut Transform ), With<RebuildTileBlock>
 	>, 
 
 	 mut meshes: ResMut<Assets<Mesh>>,
@@ -366,7 +430,7 @@ pub fn build_tile_block_meshes(
 	){
 
 
-	for (block_entity, clay_tile_block, parent ) in clay_tile_layer_query.iter(){
+	for (block_entity, clay_tile_block, parent, mut tile_block_transform ) in clay_tile_layer_query.iter_mut(){
 
         if !clay_tile_block.is_complete() {
             // not complete so we skip 
@@ -389,6 +453,8 @@ pub fn build_tile_block_meshes(
 		let tile_diffuse_texture = clay_tiles_root.get_diffuse_texture_image().clone();
             info!("building clay tile mesh");
 
+        let color_texture_expansion_factor = clay_tile_block.uv_expansion_factor;
+
 	    let tile_material: Handle<TileMaterialExtension> =
                 tile_materials.add(ExtendedMaterial {
                     base: StandardMaterial {
@@ -396,7 +462,7 @@ pub fn build_tile_block_meshes(
                        // opaque_render_method: OpaqueRendererMethod::Auto,
                        // alpha_mode: AlphaMode::Mask(0.1),
                         
-                        unlit: true,  // need this for now ..
+                     //   unlit: true,  // need this for now ..
 
 
                         reflectance: 0.2,
@@ -416,6 +482,8 @@ pub fn build_tile_block_meshes(
                             chunk_uv,
                         },*/
                      //   tool_preview_uniforms: ToolPreviewUniforms::default(),
+
+                        color_texture_expansion_factor:color_texture_expansion_factor ,
                         diffuse_texture: tile_diffuse_texture.clone(),
                        
                         ..default()
@@ -424,6 +492,8 @@ pub fn build_tile_block_meshes(
 
 
 
+             tile_block_transform.translation.y = clay_tile_block.height_level as f32;
+
              let mesh = clay_tile_block.build_mesh();
 
 
@@ -431,6 +501,11 @@ pub fn build_tile_block_meshes(
                 warn!("could not build mesH!!");  //remove entity ? 
                 continue
             };
+
+
+            commands.entity(block_entity).despawn_descendants();
+
+
              
             let terrain_mesh_handle = meshes.add(mesh);
 
@@ -444,6 +519,8 @@ pub fn build_tile_block_meshes(
                 })
                 .insert(ClayTileMesh)
                 .id();
+
+
 
            // chunk_data.material_handle = Some(chunk_terrain_material);
 

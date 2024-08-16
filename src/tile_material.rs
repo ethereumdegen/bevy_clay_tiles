@@ -33,6 +33,9 @@ pub struct ToolPreviewUniforms {
 
 #[derive(Asset, AsBindGroup, TypePath, Clone, Debug, Default)]
 pub struct TileMaterial {
+      #[uniform(20)]
+     pub color_texture_expansion_factor: f32,
+
     /*#[uniform(20)]
     pub chunk_uniforms: ChunkMaterialUniforms,
 

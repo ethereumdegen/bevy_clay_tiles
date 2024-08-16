@@ -2,7 +2,6 @@
 ClayTilesConfig(
     
     
-    texture_uv_expansion_factor:16,
     texture_image_sections: 4,
      
      

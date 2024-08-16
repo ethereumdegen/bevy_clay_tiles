@@ -1,4 +1,4 @@
- 
+
 //see bindings in terrain_material.rs 
  
  //https://github.com/nicopap/bevy_mod_paramap/blob/main/src/parallax_map.wgsl
@@ -36,7 +36,7 @@ struct StandardMaterial {
     alpha_cutoff: f32,
 };
 
-
+/*
 struct ChunkMaterialUniforms {
     color_texture_expansion_factor: f32 ,
     chunk_uv: vec4<f32>,  //start_x, start_y, end_x, end_y   -- used to subselect a region from the splat texture 
@@ -49,7 +49,7 @@ struct ToolPreviewUniforms {
     tool_radius: f32,
     tool_color: vec3<f32>    
 };
-
+*/
 //https://github.com/DGriffin91/bevy_mod_standard_material/blob/main/assets/shaders/pbr.wgsl
 
 
@@ -76,10 +76,10 @@ var occlusion_sampler: sampler;
 
 
 @group(2) @binding(20)
-var<uniform> chunk_uniforms: ChunkMaterialUniforms;
+var<uniform>  color_texture_expansion_factor:   f32;
 
-@group(2) @binding(21)
-var<uniform> tool_preview_uniforms: ToolPreviewUniforms;
+//@group(2) @binding(21)
+//var<uniform> tool_preview_uniforms: ToolPreviewUniforms;
 
 @group(2) @binding(22)
 var base_color_texture: texture_2d_array<f32>;
@@ -108,7 +108,7 @@ fn fragment(
 ) -> @location(0) vec4<f32> {
     
     
-    let mesh_uv =   mesh.uv;
+    let mesh_uv =  color_texture_expansion_factor * mesh.uv;
      
      let tile_index = 0; // do uv coord stuff ?
  
