@@ -8,7 +8,7 @@ use bevy_clay_tiles::tile_edit::{TileEditingResource,EditingTool as TileEditingT
  
 //use bevy_clay_tiles::clay_tile_layer::{ClayTileLayer,ClayTileLayerBuildData};
 use bevy_clay_tiles::tiles_config::ClayTilesConfig;
-use bevy_clay_tiles::tiles::ClayTilesRoot;
+ 
   
 use bevy::prelude::*;
  
@@ -19,7 +19,9 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(BevyClayTilesPlugin {})
+        .add_plugins(BevyClayTilesPlugin {
+            config: ClayTilesConfig::load_from_file("assets/tiles_config.ron").unwrap()
+        })
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
         .add_systems(Update, ( rotate_camera ) )
@@ -85,12 +87,12 @@ fn setup(
         ];
 
 
-        let clay_tiles_root =  commands
+        /*let clay_tiles_root =  commands
         .spawn(SpatialBundle::default())
         .insert(ClayTilesConfig::load_from_file("assets/tiles_config.ron").unwrap())
         .insert(ClayTilesRoot::new())
         .id();
-
+            */
 
 
         let clay_tile_layer = commands
@@ -105,9 +107,7 @@ fn setup(
         .id();
 
 
-        commands.entity(clay_tiles_root)
-        .add_child(clay_tile_layer);
-
+        
 
 
 

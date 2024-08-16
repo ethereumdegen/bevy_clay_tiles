@@ -1,24 +1,19 @@
 
 
+use crate::ClayTilesTexturingResource;
 use crate::pre_mesh::PreMesh;
 use crate::tile_edit::TileEditingResource;
  
-use crate::pre_mesh::point3_to_array_f32;
-use crate::pre_mesh::flatten_indices;
 use bevy::color::palettes::tailwind;
 use geo::{Point,LineString,Polygon}; 
 use crate::TileMaterialExtension;
  
 use crate::tile_material::TileMaterial;
-use crate::tiles::ClayTilesRoot;
-use crate::tiles_config::ClayTilesConfig;
  
- use bevy::render::mesh::Indices;
-use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::render_resource::PrimitiveTopology::TriangleList;
+ 
+  
 
-
-use bevy::ecs::component;
+ 
 use bevy::prelude::*;
 
 
@@ -232,9 +227,9 @@ fn render_gizmos_for_clay_tile_block_builders(
 
 fn update_clay_tile_block_builders(
     mut commands: Commands,
-    query: Query<(Entity, &ClayTileBlockBuilder, &Parent)>,
+    query: Query<(Entity, &ClayTileBlockBuilder, Option<&Parent>)>,
 ) {
-    for (entity, builder, parent) in query.iter() {
+    for (entity, builder, parent_option) in query.iter() {
         if builder.is_complete() {
             // Build the ClayTileBlock from the builder
             if let Some(clay_tile_block) = builder.build() {
@@ -242,10 +237,15 @@ fn update_clay_tile_block_builders(
                 commands.entity(entity).despawn_recursive();
 
                 // Spawn the new ClayTileBlock
-                commands.spawn(SpatialBundle::default())
-                .set_parent( parent.get()  )
+               let new_block =  commands.spawn(SpatialBundle::default())
+               
                 .insert( clay_tile_block )
-                .insert( RebuildTileBlock );
+                .insert( RebuildTileBlock ) .id() ;
+
+                if let Some(parent) = parent_option.map(|p| p.get() ){ 
+                    commands.entity(new_block)
+                      .set_parent( parent ) ;
+                  }
             }
         }
     }
@@ -389,19 +389,19 @@ fn add_needs_rebuild_to_block_mesh(
 pub fn build_tile_block_meshes(
 	mut commands:Commands,
 	mut clay_tile_layer_query: Query<
-	 (Entity, & ClayTileBlock,  &Parent, &mut Transform ), With<RebuildTileBlock>
+	 (Entity, & ClayTileBlock,  Option<&Parent>, &mut Transform ), With<RebuildTileBlock>
 	>, 
 
 	 mut meshes: ResMut<Assets<Mesh>>,
-
-    tile_root_query: Query<(&ClayTilesRoot, &ClayTilesConfig)>,
+   tile_texture_resource: Res <ClayTilesTexturingResource>,
+  //  tile_root_query: Query<(&ClayTilesRoot, &ClayTilesConfig)>,
     mut tile_materials: ResMut<Assets<TileMaterialExtension>>,
 
 
 	){
 
 
-	for (block_entity, clay_tile_block, parent, mut tile_block_transform ) in clay_tile_layer_query.iter_mut(){
+	for (block_entity, clay_tile_block, parent_option, mut tile_block_transform ) in clay_tile_layer_query.iter_mut(){
 
         if !clay_tile_block.is_complete() {
             // not complete so we skip 
@@ -415,13 +415,13 @@ pub fn build_tile_block_meshes(
 		commands.entity(block_entity).remove::<RebuildTileBlock>();
 
 		
-		let Some((clay_tiles_root,clay_tiles_config)) = tile_root_query.get(parent.get()).ok() else {
+		/*let Some((clay_tiles_root,clay_tiles_config)) = tile_root_query.get(parent.get()).ok() else {
             warn!("Invalid tile parent");
             continue
-        };
+        };*/
 
 		//let tile_diffuse_texture = clay_tiles_root.terrain_data_loaded
-		let tile_diffuse_texture = clay_tiles_root.get_diffuse_texture_image().clone();
+		let tile_diffuse_texture = tile_texture_resource.get_diffuse_texture_image().clone();
             info!("building clay tile mesh");
 
         let color_texture_expansion_factor = clay_tile_block.uv_expansion_factor;

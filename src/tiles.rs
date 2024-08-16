@@ -12,8 +12,21 @@ use bevy::render::texture::{
 };
 
 
-#[derive(Component, Default)]
-pub struct ClayTilesRoot {
+
+
+#[derive(Resource, Default)]
+pub struct ClayTilesConfigResource  (pub ClayTilesConfig) ;
+
+impl ClayTilesConfigResource {
+
+    pub fn get_config(&self) -> &ClayTilesConfig {
+        &self.0
+    }
+}
+
+
+#[derive(Resource, Default)]
+pub struct ClayTilesTexturingResource {
     
     //pub tiles_data_loaded: bool,
 
@@ -24,10 +37,7 @@ pub struct ClayTilesRoot {
     normal_image_finalized: bool,
 }
 
-impl ClayTilesRoot {
-    pub fn new() -> Self {
-        ClayTilesRoot::default()
-    }
+ impl ClayTilesTexturingResource { 
 
       pub fn get_diffuse_texture_image(&self) -> &Option<Handle<Image>> {
         &self.texture_image_handle
@@ -37,37 +47,42 @@ impl ClayTilesRoot {
         &self.normal_image_handle
     }
 }
-
+ 
 
 
 pub fn load_tiles_texture_from_image(
-    mut tile_root_query: Query<(&mut ClayTilesRoot, &ClayTilesConfig)>,
+     config_resource: ResMut<ClayTilesConfigResource>,
+    mut tile_texture_resource: ResMut<ClayTilesTexturingResource>,
+ //   mut tile_root_query: Query<(&mut ClayTilesRoot, &ClayTilesConfig)>,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
     //  materials: Res <Assets<TerrainMaterialExtension>>,
 ) {
-    for (mut tiles_data, tiles_config) in tile_root_query.iter_mut() {
-        if tiles_data.texture_image_handle.is_none() {
+
+    let tiles_config = config_resource.get_config();
+    
+    //for (mut tiles_data, tiles_config) in tile_root_query.iter_mut() {
+        if tile_texture_resource.texture_image_handle.is_none() {
             let array_texture_path = &tiles_config.diffuse_folder_path;
 
             let tex_image = asset_server.load(AssetPath::from_path(array_texture_path));
-            tiles_data.texture_image_handle = Some(tex_image);
+            tile_texture_resource.texture_image_handle = Some(tex_image);
         }
 
         //try to load the height map data from the height_map_image_handle
-        if !tiles_data.texture_image_finalized {
-            let texture_image: &mut Image = match &tiles_data.texture_image_handle {
+        if !tile_texture_resource.texture_image_finalized {
+            let texture_image: &mut Image = match &tile_texture_resource.texture_image_handle {
                 Some(texture_image_handle) => {
                     let texture_image_loaded = asset_server.get_load_state(texture_image_handle);
 
                     if texture_image_loaded != Some(LoadState::Loaded) {
                         println!("tiles texture not yet loaded");
-                        continue;
+                        return;
                     }
 
                     images.get_mut(texture_image_handle).unwrap()
                 }
-                None => continue,
+                None => return,
             };
 
             //https://github.com/bevyengine/bevy/pull/10254
@@ -95,8 +110,8 @@ pub fn load_tiles_texture_from_image(
             }
 
            
-            tiles_data.texture_image_finalized = true;
-        }
+            tile_texture_resource.texture_image_finalized = true;
+      //  }
     }
 }
 

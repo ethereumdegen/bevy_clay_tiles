@@ -1,7 +1,7 @@
 
 use crate::clay_tile_block::ClayTileBlockBuilder;
 use crate::clay_tile::ClayTileComponent;
-use crate::tiles::ClayTilesRoot;
+ 
  
 use core::f32::consts::PI;
 use bevy::color::palettes::tailwind;
@@ -65,7 +65,8 @@ pub struct TileEditingResource{
     selected_tool: Option<EditingTool>,
     build_grid_data: TileBuildGridData  ,  
 
-    selected_tile_type: u32 
+    selected_tile_type: u32 ,
+    new_tile_parent_entity: Option<Entity>
 }
 
 
@@ -110,6 +111,21 @@ impl TileEditingResource {
 
 
         self.selected_tool = tool_type;
+
+    }
+
+    pub fn set_new_tile_parent_entity(&mut self, parent: Option<Entity>) {
+
+
+        self.new_tile_parent_entity = parent;
+
+    }
+
+
+    pub fn get_new_tile_parent_entity(& self ) -> Option<Entity>{
+
+
+        self.new_tile_parent_entity  
 
     }
 
@@ -387,10 +403,10 @@ fn handle_polygon_tile_build_events(
     tile_edit_resource: Res<TileEditingResource>,
     mut builder_query: Query<&mut ClayTileBlockBuilder>,
 
-    root_query: Query<Entity, With< ClayTilesRoot>>,
+   // root_query: Query<Entity, With< ClayTilesRoot>>,
 ) {
 
-    let Some(root_entity) = root_query.get_single().ok() else {return};
+    let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
 
     if let Some(EditingTool::BuildTile(BuildTileTool::PolygonTileBuild)) = &tile_edit_resource.selected_tool {
         for evt in evt_reader.read() {
@@ -411,7 +427,7 @@ fn handle_polygon_tile_build_events(
                         let tile_type_index = tile_edit_resource.get_build_tile_type();
 
                         // No builder exists, create a new one
-                        commands.spawn((
+                        let block_builder_entity = commands.spawn((
                              SpatialBundle::default(),
                               ClayTileBlockBuilder {
                                 polygon_points: vec![position],
@@ -421,7 +437,12 @@ fn handle_polygon_tile_build_events(
 
                             }
                             // Additional components can be added here
-                        )).set_parent( root_entity );
+                        )).id();
+
+                        if let Some( new_tile_parent_entity ) = new_tile_parent_entity {
+
+                            commands.entity(block_builder_entity).set_parent( new_tile_parent_entity );
+                        }
                     }
                 }
 
@@ -453,10 +474,11 @@ fn handle_rectangle_tile_build_events(
     mut evt_reader: EventReader<BuildGridInteractionEvent>,
     tile_edit_resource: Res<TileEditingResource>,
     mut builder_query: Query<&mut ClayTileBlockBuilder>,
-    root_query: Query<Entity, With< ClayTilesRoot>>,
+  // root_query: Query<Entity, With< ClayTilesRoot>>,
 ) {
 
-    let Some(root_entity) = root_query.get_single().ok() else {return};
+  let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
+
 
 
     if let Some(EditingTool::BuildTile(BuildTileTool::RectangleTileBuild)) = &tile_edit_resource.selected_tool {
@@ -479,7 +501,7 @@ fn handle_rectangle_tile_build_events(
                         let tile_type_index = tile_edit_resource.get_build_tile_type();
 
                         // No builder exists, create a new one with the first point
-                        commands.spawn((
+                        let block_builder_entity = commands.spawn((
                             SpatialBundle::default(),
                             ClayTileBlockBuilder {
                                 polygon_points: vec![position],
@@ -487,7 +509,12 @@ fn handle_rectangle_tile_build_events(
                                 tile_type_index
                             },
                             // Additional components can be added here
-                        )).set_parent( root_entity );
+                        )).id() ;
+
+                         if let Some( new_tile_parent_entity ) = new_tile_parent_entity {
+
+                            commands.entity(block_builder_entity).set_parent( new_tile_parent_entity );
+                        }
                     }
                 }
                 GridInteractionType::Release => {

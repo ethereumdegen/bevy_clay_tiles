@@ -1,4 +1,7 @@
 
+use crate::tiles::ClayTilesConfigResource;
+use crate::tiles_config::ClayTilesConfig;
+use crate::tiles::ClayTilesTexturingResource;
 use bevy_mod_raycast::prelude::CursorRayPlugin;
 use crate::tile_edit::tile_edit_plugin;
 
@@ -25,19 +28,25 @@ use bevy::{asset::load_internal_asset, prelude::*};
  
 
 pub struct BevyClayTilesPlugin {
-    
+    pub config: ClayTilesConfig
 }
 
+/*
 impl Default for BevyClayTilesPlugin {
     fn default() -> Self {
         Self {
           //  task_update_rate: Duration::from_millis(250),
         }
     }
-}
+}*/
+
 impl Plugin for BevyClayTilesPlugin {
     fn build(&self, app: &mut App) {
 
+        app.init_resource::<ClayTilesTexturingResource>();
+
+        app.insert_resource(ClayTilesConfigResource(self.config.clone())) ;
+        //app.init_resource::<ClayTilesConfigResource>();
 
         load_internal_asset!(
             app,
