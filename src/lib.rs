@@ -13,33 +13,21 @@ use crate::tile_material::TILE_SHADER_HANDLE;
 use bevy::{asset::load_internal_asset, prelude::*};
  
 
-//use std::time::Duration;
  
  pub mod tiles;
- //pub mod clay_tile_layer;
+ 
  pub mod clay_tile_block; 
  pub mod tile_material;
  pub mod tiles_config;
  pub mod tile_edit;
  pub mod pre_mesh;
  pub mod clay_tile;
- //pub mod clay_tile_operation;
- 
  
 
 pub struct BevyClayTilesPlugin {
     pub config: ClayTilesConfig
 }
-
-/*
-impl Default for BevyClayTilesPlugin {
-    fn default() -> Self {
-        Self {
-          //  task_update_rate: Duration::from_millis(250),
-        }
-    }
-}*/
-
+ 
 impl Plugin for BevyClayTilesPlugin {
     fn build(&self, app: &mut App) {
 
@@ -73,10 +61,7 @@ impl Plugin for BevyClayTilesPlugin {
             ).chain())
 
 
-        ;
-        
- 
-    
+        ; 
 
         
     }

@@ -1,5 +1,7 @@
 
 
+use serde::Serialize;
+use serde::Deserialize;
 use crate::ClayTilesTexturingResource;
 use crate::pre_mesh::PreMesh;
 use crate::tile_edit::TileEditingResource;
@@ -261,7 +263,7 @@ pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 
 
 //should spatially offset the layer at the appropriate height
-#[derive(Component)]
+#[derive(Component,Clone,Serialize,Deserialize)]
 pub struct ClayTileBlock {
 
         //should always be counterclockwise ! 
@@ -346,8 +348,14 @@ impl ClayTileBlock {
 
 
        let mesh_height_scale = & self.mesh_height ;
+        let mesh_bevel_factor = &self.mesh_bevel_factor ;
  
-       let pre_mesh = PreMesh::extrude_2d_polygon_to_3d(&polygon .into() , *mesh_height_scale as f64) ?;
+       let pre_mesh = PreMesh::extrude_2d_polygon_to_3d(
+        &polygon .into() , 
+        *mesh_height_scale as f64,
+        *mesh_bevel_factor as f64
+
+        ) ?;
        let mesh = pre_mesh.build();
 
         Some(mesh)

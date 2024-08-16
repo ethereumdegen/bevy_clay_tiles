@@ -1,5 +1,5 @@
 
- 
+ use geo::algorithm::centroid::Centroid;
  
 use lyon::math::{Box2D, Point, point};
 use lyon::path::{Path, Winding, builder::BorderRadii};
@@ -129,7 +129,11 @@ impl PreMesh {
 
 
 // Function to extrude a Polygon into a 3D mesh
-pub fn extrude_2d_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> Option<Self> {
+pub fn extrude_2d_polygon_to_3d(
+    polygon: &MultiPolygon , 
+    height: f64,
+    bevel_factor: f64
+    ) -> Option<Self> {
     
 
 
@@ -154,9 +158,28 @@ pub fn extrude_2d_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> Option<
     }
 
 
+     // Compute the centroid of the top vertices and scale them in 
+    if let Some(centroid) = polygon.centroid() {
+        let centroid = [centroid.x() as f32, height as f32, centroid.y() as f32];
+
+        // Scale top vertices towards the centroid based on the bevel factor
+        for vertex in &mut top_vertices {
+            vertex[0] = vertex[0] + (centroid[0] - vertex[0]) * bevel_factor as f32;
+            vertex[2] = vertex[2] + (centroid[2] - vertex[2]) * bevel_factor as f32;
+        }
+    }
+
+
+
+//fix the uv unwrapping here.. 
 
         let uv_coords_height = height.clone() as f32;
-    // Add triangles for the sides
+
+       // let uv_coords_height_scaled = 1.0 / ( uv_coords_height / (1.0 - bevel_factor as f32) );
+       let uv_coords_height_scaled = 0.5 ;
+        let uv_coords_width_scaled = 1.0  ;
+
+    // Add triangles for the sides --uv are broken ? 
         for i in 0..shape_2d_vertex_count {
             let next_index = (i + 1) % shape_2d_vertex_count;
             let positions  = [
@@ -169,9 +192,10 @@ pub fn extrude_2d_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> Option<
 
             
             let uv_coords = [
-                [0.0, 0.0],
-                [uv_coords_height, 0.0],
-                [uv_coords_height, uv_coords_height],
+               
+                [uv_coords_width_scaled, 0.0],
+                 [0.0, 0.0],
+                [uv_coords_width_scaled, uv_coords_height_scaled],
             ];
             premesh.add_triangle(positions , uv_coords);
 
@@ -182,9 +206,10 @@ pub fn extrude_2d_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> Option<
                 bottom_vertices[next_index],
             ];
             let uv_coords = [
-                [0.0, 0.0],
-                [uv_coords_height, uv_coords_height],
-                [0.0, uv_coords_height],
+               
+                [uv_coords_width_scaled, uv_coords_height_scaled],
+                 [0.0, 0.0],
+                [0.0, uv_coords_height_scaled],
             ];
             premesh.add_triangle(positions , uv_coords);
         }
@@ -199,52 +224,99 @@ pub fn extrude_2d_polygon_to_3d(polygon: &MultiPolygon , height: f64) -> Option<
 
      // Tessellation for the top and bottom faces
         let mut tessellator = FillTessellator::new();
-        let mut buffers: VertexBuffers<Point, u16> = VertexBuffers::new();
+        let mut top_side_buffers: VertexBuffers<Point, u16> = VertexBuffers::new();
+        let mut bottom_side_buffers: VertexBuffers<Point, u16> = VertexBuffers::new();
 
-     
-            let mut builder = Path::builder();
+        // ---- build paths 
+            let mut top_side_builder = Path::builder();
+ 
+             let mut has_placed_first_point = false;
 
-
-            let mut has_placed_first_point = false;
-
-            // Building the path from the polygon
-            for coord in polygon.exterior_coords_iter() {
+            // Building the path from the adjusted top vertices
+            for vertex in &top_vertices {
                 if !has_placed_first_point {
-                     builder.begin(point(coord.x as f32, coord.y as f32));
-                     has_placed_first_point = true;
-                }else {
-                     builder.line_to(point(coord.x as f32, coord.y as f32));
-                } 
-                
+                    top_side_builder.begin(point(vertex[0], vertex[2]));
+                    has_placed_first_point = true;
+                } else {
+                    top_side_builder.line_to(point(vertex[0], vertex[2]));
+                }
             }
-            builder.close();
+            top_side_builder.close();
 
-            let path = builder.build();
+
+
+            let mut bottom_side_builder = Path::builder();
+ 
+             let mut has_placed_first_point = false;
+
+            // Building the path from the adjusted top vertices
+            for vertex in &bottom_vertices {
+                if !has_placed_first_point {
+                    bottom_side_builder.begin(point(vertex[0], vertex[2]));
+                    has_placed_first_point = true;
+                } else {
+                    bottom_side_builder.line_to(point(vertex[0], vertex[2]));
+                }
+            }
+            bottom_side_builder.close();
+            // -----
+
+
+            //-- tesselate 
+            let top_side_path = top_side_builder.build();
             // Tesselate the path
             tessellator.tessellate_path(
-                &path,
+                &top_side_path,
                 &FillOptions::tolerance(0.01),
-                &mut simple_builder(&mut buffers),
+                &mut simple_builder(&mut top_side_buffers),
             ).unwrap();
+
+             let bottom_side_path = bottom_side_builder.build();
+            // Tesselate the path
+            tessellator.tessellate_path(
+                &bottom_side_path,
+                &FillOptions::tolerance(0.01),
+                &mut simple_builder(&mut bottom_side_buffers),
+            ).unwrap();
+
+            //---
          
 
             // Create top and bottom faces from tessellation
-        for triangle in buffers.indices.chunks(3) {
-            let mut bottom_triangle = [Default::default(); 3];
+        for triangle in top_side_buffers.indices.chunks(3) {
+           // let mut bottom_triangle = [Default::default(); 3];
             let mut top_triangle = [Default::default(); 3];
             let mut uvs = [Default::default(); 3];
 
             for (i, &index) in triangle.iter().enumerate() {
-                let vertex = buffers.vertices[index as usize];
-                bottom_triangle[i] = [vertex.x, 0.0, vertex.y];  // Correct as is
+                let vertex = top_side_buffers.vertices[index as usize];
+               // bottom_triangle[i] = [vertex.x, 0.0, vertex.y];  // Correct as is
                 top_triangle[i] = [vertex.x, height as f32, vertex.y];  // Correct as is
                 uvs[i] = [vertex.x, vertex.y]; // Basic UV mapping; adjust as necessary
             }
 
              // info!("add top tri {:?}",top_triangle);
             premesh.add_triangle(top_triangle , uvs);  // Adding top face
+           // premesh.add_triangle(bottom_triangle , uvs);  // Adding bottom face with corrected winding order
+        }
+
+         for triangle in bottom_side_buffers.indices.chunks(3) {
+            let mut bottom_triangle = [Default::default(); 3];
+          //  let mut top_triangle = [Default::default(); 3];
+            let mut uvs = [Default::default(); 3];
+
+            for (i, &index) in triangle.iter().enumerate() {
+                let vertex = bottom_side_buffers.vertices[index as usize];
+                bottom_triangle[i] = [vertex.x, 0.0, vertex.y];  // Correct as is
+               // top_triangle[i] = [vertex.x, height as f32, vertex.y];  // Correct as is
+                uvs[i] = [vertex.x, vertex.y]; // Basic UV mapping; adjust as necessary
+            }
+
+             // info!("add top tri {:?}",top_triangle);
+          //  premesh.add_triangle(top_triangle , uvs);  // Adding top face
             premesh.add_triangle(bottom_triangle , uvs);  // Adding bottom face with corrected winding order
         }
+
 
   
 
