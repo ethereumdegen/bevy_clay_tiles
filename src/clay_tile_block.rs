@@ -1,5 +1,6 @@
 
 
+use bevy::render::render_resource::Origin3d;
 use serde::Serialize;
 use serde::Deserialize;
 use crate::ClayTilesTexturingResource;
@@ -301,6 +302,11 @@ impl Default for ClayTileBlock {
 impl ClayTileBlock {
 
 
+    pub fn get_origin_point(&self) -> Option<&IVec2> {
+
+        self.polygon_points.first()
+
+    }
 
     pub fn to_linestring(&self) -> LineString {
  
@@ -349,9 +355,16 @@ impl ClayTileBlock {
 
        let mesh_height_scale = & self.mesh_height ;
         let mesh_bevel_factor = &self.mesh_bevel_factor ;
+
+        let origin_offset = self.get_origin_point().map( |p| 
+
+            *p * -1
+
+         ).unwrap_or( IVec2::new(0,0) ) ;
  
        let pre_mesh = PreMesh::extrude_2d_polygon_to_3d(
         &polygon .into() , 
+        origin_offset,
         *mesh_height_scale as f64,
         *mesh_bevel_factor as f64
 
@@ -470,7 +483,11 @@ pub fn build_tile_block_meshes(
                 });
 
 
-
+            if let Some(origin_point) =  clay_tile_block.get_origin_point() {
+                tile_block_transform.translation.x = origin_point.x as f32;
+                tile_block_transform.translation.z = origin_point.y as f32;
+            }
+           
              tile_block_transform.translation.y = clay_tile_block.height_level as f32;
 
              let mesh = clay_tile_block.build_mesh();

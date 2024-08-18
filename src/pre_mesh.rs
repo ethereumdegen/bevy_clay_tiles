@@ -1,5 +1,6 @@
 
- use geo::algorithm::centroid::Centroid;
+ use geo::Coord;
+use geo::algorithm::centroid::Centroid;
  
 use lyon::math::{Box2D, Point, point};
 use lyon::path::{Path, Winding, builder::BorderRadii};
@@ -131,6 +132,7 @@ impl PreMesh {
 // Function to extrude a Polygon into a 3D mesh
 pub fn extrude_2d_polygon_to_3d(
     polygon: &MultiPolygon , 
+    origin_offset: IVec2,
     height: f64,
     bevel_factor: f64
     ) -> Option<Self> {
@@ -143,7 +145,18 @@ pub fn extrude_2d_polygon_to_3d(
      let shape_2d_vertex_count = polygon.exterior_coords_iter().count().clone();
 
     // Iterate over the exterior of the polygon
-    let exterior_coords = polygon.exterior_coords_iter() ;
+  //  let exterior_coords = polygon.exterior_coords_iter() ;
+
+    let exterior_coords: Vec<Coord<f64>> = polygon
+        .exterior_coords_iter()
+        .map(|coord|  
+              Coord {
+                 x: coord.x + origin_offset.x as f64,
+                 y: coord.y + origin_offset.y as f64,
+             }
+
+        )
+        .collect();
  
 
     let mut bottom_vertices = Vec::new();

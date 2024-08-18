@@ -66,7 +66,9 @@ pub struct TileEditingResource{
     build_grid_data: TileBuildGridData  ,  
 
     selected_tile_type: u32 ,
-    new_tile_parent_entity: Option<Entity>
+    new_tile_parent_entity: Option<Entity>,
+
+    pub selected_tile: Option<Entity>,
 }
 
 
