@@ -6,5 +6,6 @@ ClayTilesConfig(
      
      
      diffuse_folder_path: "textures/tiles_array_texture.tga", 
+     tile_types_config_path: "tile_types.ron", 
       
 )

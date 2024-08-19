@@ -1,5 +1,6 @@
 
 
+use crate::tile_types_config::TileTypeConfig;
 use crate::tile_gizmos::ClayTileBlockSelectable;
 use crate::tile_types_config;
 use crate::tiles::ClayTilesTypesConfigResource;
@@ -84,7 +85,7 @@ pub struct ClayTileBlockBuilder {
     pub polygon_points: Vec<IVec2>,
 
      pub height_level: u32, 
-     pub tile_type_index: u32,
+     pub tile_type_index: usize,
      pub mesh_height: f32, 
 
 
@@ -307,7 +308,7 @@ pub struct ClayTileBlock {
 
   //  pub uv_expansion_factor: f32 ,
 
-    pub tile_type_index: u32,  
+    pub tile_type_index: usize,  
 
 } 
 
@@ -476,15 +477,19 @@ pub fn build_tile_block_meshes(
 		let tile_diffuse_texture = tile_texture_resource.get_diffuse_texture_image().clone();
             info!("building clay tile mesh");
 
+        let tile_type_id = clay_tile_block.tile_type_index;
 
 
+        let tile_config_default = &TileTypeConfig::default();
+        
+        let tile_type_config = tile_types_config.tile_type_data.get( &tile_type_id ) 
+        .unwrap_or( tile_config_default )
+        ;
             // get uv exp factor from tile_types_config 
 
-        let color_texture_expansion_factor = 0.25;
-        let diffuse_color_tint = LinearRgba::rgb(1.0, 1.0,1.0);
-        let tile_texture_index = 0; //load from .. the config ! 
-
-
+        let color_texture_expansion_factor = &tile_type_config.diffuse_uv_expansion_factor;
+        let diffuse_color_tint = &tile_type_config.diffuse_color_tint.unwrap_or(LinearRgba::rgb(1.0, 1.0, 1.0));
+        let tile_diffuse_texture_index = &tile_type_config.diffuse_texture_index;
 
 	    let tile_material: Handle<TileMaterialExtension> =
                 tile_materials.add(ExtendedMaterial {
@@ -515,11 +520,11 @@ pub fn build_tile_block_meshes(
                         },*/
                      //   tool_preview_uniforms: ToolPreviewUniforms::default(),
 
-                        color_texture_expansion_factor:color_texture_expansion_factor ,
+                        color_texture_expansion_factor:*color_texture_expansion_factor ,
                         diffuse_texture: tile_diffuse_texture.clone(),
                         diffuse_color_tint: diffuse_color_tint.to_vec4(),
 
-                        tile_texture_index,
+                        tile_texture_index: *tile_diffuse_texture_index,
                        
                         ..default()
                     },

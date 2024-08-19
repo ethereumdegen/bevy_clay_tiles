@@ -1,8 +1,11 @@
 
+use crate::tile_types_config::TileTypesConfig;
 use crate::tiles::ClayTilesTypesConfigResource;
 use crate::tile_gizmos::tile_gizmos_plugin;
 use transform_gizmo_bevy::TransformGizmoPlugin;
 use crate::tiles::ClayTilesConfigResource;
+
+use bevy::asset::{AssetPath, LoadState};
 use crate::tiles_config::ClayTilesConfig;
 use crate::tiles::ClayTilesTexturingResource;
 use bevy_mod_raycast::prelude::CursorRayPlugin;
@@ -37,7 +40,12 @@ impl Plugin for BevyClayTilesPlugin {
     fn build(&self, app: &mut App) {
 
         app.init_resource::<ClayTilesTexturingResource>();
-        app.insert_resource(ClayTilesTypesConfigResource::default()); 
+        app.insert_resource(ClayTilesTypesConfigResource::new( 
+            &TileTypesConfig::load_from_file(
+              &format!("assets/{}",AssetPath::from_path( self.config.get_tile_types_config_path() ).path().to_str().unwrap() )  
+            ).unwrap()
+        
+            )  ); 
         app.insert_resource(ClayTilesConfigResource(self.config.clone())) ;
         //app.init_resource::<ClayTilesConfigResource>();
 

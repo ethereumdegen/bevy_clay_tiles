@@ -9,7 +9,7 @@
         diffuse_uv_expansion_factor: 1.0,
         diffuse_color_tint: Some( LinearRgba(
                           red: 1.0,
-                          green: 1.0,
+                          green: 0.0,
                           blue:  1.0,
                           alpha:  1.0,
                       )  )

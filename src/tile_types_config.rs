@@ -17,7 +17,7 @@ use std::path::PathBuf;
 #[derive(  Deserialize, Serialize, Clone)]
 pub struct TileTypesConfig {
     
-    tile_types: Vec<TileTypeConfig>
+    pub tile_types: Vec<TileTypeConfig>
     
    
 }
@@ -27,15 +27,44 @@ pub struct TileTypesConfig {
 #[derive(  Deserialize, Serialize, Clone)]
 pub struct TileTypeConfig {
     
-   name: String,
-   diffuse_texture_index: usize,
+   pub name: String,
+   pub diffuse_texture_index: u32,
 
-   diffuse_uv_expansion_factor: f32, 
-   diffuse_color_tint: Option<Color>, 
+   pub diffuse_uv_expansion_factor: f32, 
+   pub diffuse_color_tint: Option<LinearRgba>, 
 
     
    
 }
+
+impl Default for TileTypeConfig {
+
+
+    fn default() -> Self { 
+
+        Self {
+            name: "UnknownTileType".to_string(),
+            diffuse_texture_index: 0,
+            diffuse_uv_expansion_factor: 1.0,
+            diffuse_color_tint: None,
+        }
+
+     }
+}
+
+impl TileTypesConfig {
+
+      pub fn load_from_file(file_path: &str) -> Result<Self, ron::Error> {
+
+        let mut file = File::open(file_path).expect("Failed to open file");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)
+            .expect("Failed to read file");
+        Ok(ron::from_str(&contents)?)
+    }
+
+}
+
  
 /*
 impl TileTypesConfig {

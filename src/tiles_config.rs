@@ -20,7 +20,7 @@ pub struct ClayTilesConfig {
    
     pub texture_image_sections: u32,
     pub diffuse_folder_path: PathBuf,
-   
+    pub tile_types_config_path: PathBuf,
 }
 
 impl Default for ClayTilesConfig {
@@ -30,6 +30,7 @@ impl Default for ClayTilesConfig {
             
             texture_image_sections: 4, 
             diffuse_folder_path: "diffuse/".into(),
+            tile_types_config_path: "tile_types.ron".into()
             
          //   collider_data_folder_path: "collider/".into(),
         }
@@ -48,6 +49,12 @@ impl ClayTilesConfig {
             .expect("Failed to read file");
         Ok(ron::from_str(&contents)?)
     }
+
+    pub fn get_tile_types_config_path( &self ) -> &PathBuf {
+        &self.tile_types_config_path 
+
+
+    } 
 
     
 }

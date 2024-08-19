@@ -1,5 +1,6 @@
 
 
+use crate::tile_types_config::TileTypesConfig;
 use crate::tile_types_config::TileTypeConfig;
 use bevy::utils::HashMap;
 use crate::tiles_config::ClayTilesConfig;
@@ -36,7 +37,26 @@ pub struct ClayTilesTypesConfigResource {
   pub tile_type_data: HashMap<usize, TileTypeConfig>
 }
 
+impl ClayTilesTypesConfigResource {
 
+    pub fn new( types_config: &TileTypesConfig ) -> Self {
+
+        let mut tile_type_data = HashMap::new();
+
+        for (i, element) in types_config.tile_types.iter().enumerate() {
+
+            tile_type_data.insert( i , element.clone() );
+
+        }
+
+        Self {
+            tile_type_data
+
+        }
+
+
+    }
+}
 
 
 #[derive(Resource, Default)]

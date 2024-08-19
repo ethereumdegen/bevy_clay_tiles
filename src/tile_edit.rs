@@ -80,7 +80,7 @@ pub struct TileEditingResource{
     selected_tool: Option<EditingTool>,
     build_grid_data: TileBuildGridData  ,  
 
-    selected_tile_type: u32 ,
+    selected_tile_type: usize ,
     build_mesh_height: f32, 
 
     new_tile_parent_entity: Option<Entity>,
@@ -119,14 +119,14 @@ impl TileEditingResource {
         self.build_grid_data.horizontal_offset = offset; 
     }
 
-    pub fn set_build_tile_type(&mut self, tile_type: u32){
+    pub fn set_build_tile_type(&mut self, tile_type: usize){
 
 
         self.selected_tile_type = tile_type;
     }
 
 
-    pub fn get_build_tile_type(& self) -> u32{
+    pub fn get_build_tile_type(& self) -> usize{
  
 
         self.selected_tile_type  
