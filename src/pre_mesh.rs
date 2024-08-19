@@ -245,9 +245,9 @@ pub fn extrude_2d_polygon_to_3d(
                 [0.0, uv_coords_height_scaled * vertical_distance_uv_factor],
             ];*/
             let uv_coords = [
-                [uv_coords_width_scaled * horizontal_distance_uv_factor, 0.0],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor,  uv_coords_height_scaled * vertical_distance_uv_factor],
                 [0.0, 0.0],
-                [uv_coords_width_scaled * horizontal_distance_uv_factor, uv_coords_height_scaled * vertical_distance_uv_factor],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, 0.0],
             ];
             premesh.add_triangle(positions , uv_coords);
         }
