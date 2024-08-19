@@ -26,7 +26,7 @@ fn main() {
         })
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
-        .add_systems(Update, ( rotate_camera ) )
+        .add_systems(Update, rotate_camera  )
         .run();
 }
 
@@ -58,26 +58,10 @@ fn setup(
         color: Color::srgb(1.0,1.0,1.0),
         brightness: 700.0,
     });
+ 
 
-
-
-
-        /*let tile_operations = vec![
-            ClayTileOperation {
-                height_layer: 1,
-                operation_type: OperationType::Union,  //this doesnt matter
-                shape_type: ClayShapeType::Rectangle,
-                dimensions: [[-5, -5], [3, 2]],
-            },
-            ClayTileOperation {
-                height_layer: 1,
-                operation_type: OperationType::Union,
-                shape_type: ClayShapeType::Rectangle,
-                dimensions: [[-2, -2], [1, 2]],
-            },
-        ];*/
-
-            //they need to be in this order ! 
+ 
+      //typically you wont define meshes by points manually , this is just an example ..
 
         let polygon_points = vec![
             IVec2::new(0, 0),  
@@ -87,17 +71,9 @@ fn setup(
            //  UVec2::new(0, 4),  
             IVec2::new(0, 0), // Closing the loop (same as the first point)
         ];
+ 
 
-
-        /*let clay_tiles_root =  commands
-        .spawn(SpatialBundle::default())
-        .insert(ClayTilesConfig::load_from_file("assets/tiles_config.ron").unwrap())
-        .insert(ClayTilesRoot::new())
-        .id();
-            */
-
-
-        let clay_tile_layer = commands
+         commands
         .spawn(SpatialBundle::default())
         .insert(ClayTileBlockBuilder {
 
@@ -105,42 +81,25 @@ fn setup(
 
             ..default()
         } )
-        
-        .id();
+         ;
 
 
         
 
+ 
+        /*
+        In your editor, your tooling/controls will modify the tile_edit_resource. 
+        this will allow you to edit tiles in real time
 
-
-         /*v
-            */
-
+        When you are ready to save/load your tiles, just write the 'ClayTileBlock' component with serde to hard-disk and deserialize it back to load.
+        
+        */
           tile_edit_resource.set_selected_tool(
            Some( TileEditingTool::BuildTile( BuildTileTool::RectangleTileBuild ))
         //  Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyTileHeight ))
             );
 
-     /* commands.spawn(
-        TextBundle::from_section(
-            "Press 'D' to toggle drawing gizmos on top of everything else in the scene\n\
-            Press 'P' to toggle perspective for line gizmos\n\
-            Hold 'Left' or 'Right' to change the line width of straight gizmos\n\
-            Hold 'Up' or 'Down' to change the line width of round gizmos\n\
-            Press '1' or '2' to toggle the visibility of straight gizmos or round gizmos\n\
-            Press 'A' to show all AABB boxes\n\
-            Press 'U' or 'I' to cycle through line styles for straight or round gizmos\n\
-            Press 'J' or 'K' to cycle through line joins for straight or round gizmos",
-            TextStyle::default(),
-        )
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(12.0),
-            left: Val::Px(12.0),
-            ..default()
-        }),
-    ); */
-
+      
 
 }
 
