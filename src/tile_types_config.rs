@@ -28,7 +28,10 @@ pub struct TileTypesConfig {
 pub struct TileTypeConfig {
     
    name: String,
+   diffuse_texture_index: usize,
+
    diffuse_uv_expansion_factor: f32, 
+   diffuse_color_tint: Option<Color>, 
 
     
    
