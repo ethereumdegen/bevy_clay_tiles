@@ -40,7 +40,7 @@ When creating the clay tiles, you can use either a Rectangle paint mode or a Pol
 The edit mode allows you to control: 
 
 1. the Y height offset of created tiles 
-2. the height scale that new tiles will be extruded toquicker
+2. the height scale that new tiles will be extruded up to 
 3. the tile type index (see the Config section and tile_types.ron) 
 4. the default parent entity for the tile meshes when created
 
