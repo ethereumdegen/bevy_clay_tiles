@@ -117,8 +117,8 @@ fn setup(
             */
 
           tile_edit_resource.set_selected_tool(
-         //  Some( TileEditingTool::BuildTile( BuildTileTool::PolygonTileBuild ))
-          Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyTileHeight ))
+           Some( TileEditingTool::BuildTile( BuildTileTool::PolygonTileBuild ))
+        //  Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyTileHeight ))
             );
 
      /* commands.spawn(
