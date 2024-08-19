@@ -1,6 +1,6 @@
 [package]
 name = "bevy_clay_tiles"
-description = "A tile building system for bevy"
+description = "A procedural-mesh building system for bevy"
  
  
 version = "0.14.1"
