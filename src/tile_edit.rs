@@ -1,4 +1,5 @@
 
+use crate::clay_tile_block::ClayTileBlock;
 use crate::clay_tile_block::ClayTileBlockBuilder;
 use crate::clay_tile::ClayTileComponent;
  
@@ -20,16 +21,23 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
 
         .init_resource::<TileEditingResource>()
 
-         .add_event::<BuildGridInteractionEvent>()
+        .add_event::<TileSelectionEvent>()
+
+        .add_event::<BuildGridInteractionEvent>()
         .add_systems(Update, 
 
             (
+           
+
                 update_build_grid_horizontal_offset,
                 render_tile_build_grid,
                 render_cursor_gizmo,
                 listen_for_input_events,
                 handle_polygon_tile_build_events,
                 handle_rectangle_tile_build_events, 
+
+
+              
 
                 ).chain()
 
@@ -43,14 +51,21 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
 // entity, editToolType, coords, magnitude
 #[derive(Event, Debug, Clone)]
 pub struct BuildGridInteractionEvent {
-     
-
+      
          coordinates: Vec2, 
          interaction_type: GridInteractionType,
-
-      
-
+ 
 }
+
+
+#[derive(Event, Debug, Clone)]
+pub enum TileSelectionEvent {
+      
+    SelectTile(Entity),
+    DeselectTiles, 
+ 
+}
+
 
 #[derive(Clone,Debug)]
 pub enum GridInteractionType{
@@ -60,15 +75,35 @@ pub enum GridInteractionType{
 
 }
 
-#[derive(Resource,Default)]
+#[derive(Resource )]
 pub struct TileEditingResource{ 
     selected_tool: Option<EditingTool>,
     build_grid_data: TileBuildGridData  ,  
 
     selected_tile_type: u32 ,
+    build_mesh_height: f32, 
+
     new_tile_parent_entity: Option<Entity>,
 
     pub selected_tile: Option<Entity>,
+}
+
+impl Default for TileEditingResource { 
+
+    fn default() -> Self { 
+     Self {
+
+        selected_tool: None,
+        build_grid_data: TileBuildGridData::default(),
+        selected_tile_type: 0 ,
+        build_mesh_height : 0.2 ,
+        new_tile_parent_entity: None ,
+        selected_tile: None 
+
+        }
+    }
+
+
 }
 
 
@@ -95,6 +130,17 @@ impl TileEditingResource {
  
 
         self.selected_tile_type  
+    }
+
+
+    pub fn get_build_mesh_height(&self) -> f32 {
+
+        self.build_mesh_height 
+    }
+
+       pub fn set_build_mesh_height(&mut self, height: f32)   {
+
+        self.build_mesh_height = height;
     }
 
     pub fn set_build_layer_height(&mut self, height: u32 ){
@@ -129,6 +175,29 @@ impl TileEditingResource {
 
         self.new_tile_parent_entity  
 
+    }
+
+    pub fn able_to_select_tiles(&self) -> bool {
+
+
+        match self.selected_tool{
+
+            Some(EditingTool::ModifyTile(..)) => true,
+            _ => false 
+        }
+
+
+
+    }
+
+    pub fn show_cursor_gizmo(&self) -> bool {
+
+
+            match self.selected_tool{
+
+            Some(EditingTool::BuildTile(..) ) => true,
+            _ => false 
+        }
     }
 
 }
@@ -181,6 +250,8 @@ pub struct TileBuildGridData {
     height_offset: u32,
 
     horizontal_offset: Vec2, 
+
+
    // grid_enabled: bool 
 
 }
@@ -297,8 +368,10 @@ fn render_cursor_gizmo (
      let build_grid_height  =   tile_edit_resource.build_grid_data.height_offset as f32;
      let grid_enabled =  tile_edit_resource.get_build_grid_enabled();
 
+     let render_cursor_gizmo= tile_edit_resource.show_cursor_gizmo();
 
-     if  grid_enabled {
+
+     if  grid_enabled && render_cursor_gizmo {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
         if let Some(cursor_ray) = **cursor_ray {
@@ -403,7 +476,7 @@ fn handle_polygon_tile_build_events(
     mut commands: Commands,
     mut evt_reader: EventReader<BuildGridInteractionEvent>,
     tile_edit_resource: Res<TileEditingResource>,
-    mut builder_query: Query<&mut ClayTileBlockBuilder>,
+    mut builder_query: Query<(Entity, &mut ClayTileBlockBuilder)>,
 
    // root_query: Query<Entity, With< ClayTilesRoot>>,
 ) {
@@ -420,13 +493,14 @@ fn handle_polygon_tile_build_events(
                         evt.coordinates.y.round() as i32,
                     ); 
                     
-                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
                         // Add the point to the existing builder
                         builder.polygon_points.push(position);
                     } else {
 
                         let height_level = tile_edit_resource.get_build_layer_height() ;
                         let tile_type_index = tile_edit_resource.get_build_tile_type();
+                        let mesh_height = tile_edit_resource.get_build_mesh_height();
 
                         // No builder exists, create a new one
                         let block_builder_entity = commands.spawn((
@@ -436,15 +510,16 @@ fn handle_polygon_tile_build_events(
 
                                 height_level,
                                 tile_type_index,
+                                mesh_height,
 
                             }
                             // Additional components can be added here
                         )).id();
 
-                        if let Some( new_tile_parent_entity ) = new_tile_parent_entity {
+                       // if let Some( new_tile_parent_entity ) = new_tile_parent_entity {
 
-                            commands.entity(block_builder_entity).set_parent( new_tile_parent_entity );
-                        }
+                        //    commands.entity(block_builder_entity).set_parent( new_tile_parent_entity );
+                        //}
                     }
                 }
 
@@ -456,10 +531,15 @@ fn handle_polygon_tile_build_events(
                         evt.coordinates.y.round() as i32,
                     ); 
                     
-                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
                         // Add the point to the existing builder
-                        builder.polygon_points.clear();
-                        builder.polygon_points.push(position);
+                       // builder.polygon_points.clear();
+                       // builder.polygon_points.push(position);
+
+
+                       if let Some(mut cmd) = commands.get_entity(builder_entity){
+                           cmd.despawn_recursive();
+                       }
                     }  
 
 
@@ -501,6 +581,7 @@ fn handle_rectangle_tile_build_events(
 
                         let height_level = tile_edit_resource.get_build_layer_height() ;
                         let tile_type_index = tile_edit_resource.get_build_tile_type();
+                          let mesh_height = tile_edit_resource.get_build_mesh_height();
 
                         // No builder exists, create a new one with the first point
                         let block_builder_entity = commands.spawn((
@@ -508,7 +589,8 @@ fn handle_rectangle_tile_build_events(
                             ClayTileBlockBuilder {
                                 polygon_points: vec![position],
                                 height_level,
-                                tile_type_index
+                                tile_type_index,
+                                mesh_height 
                             },
                             // Additional components can be added here
                         )).id() ;

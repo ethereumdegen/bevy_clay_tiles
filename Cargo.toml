@@ -37,6 +37,7 @@ rand = "0.8.5"
 lyon = "1.0.1"
  
 geo = "0.28.0" 
+transform-gizmo-bevy = "0.3.0"
  
 [[example]]
 name = "basic"

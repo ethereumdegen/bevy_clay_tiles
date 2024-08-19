@@ -1,6 +1,8 @@
  
  
   
+use bevy_clay_tiles::tile_edit::ModifyTileTool;
+use transform_gizmo_bevy::GizmoCamera;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlockBuilder;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlock;
 use bevy_clay_tiles::tile_edit::BuildTileTool;
@@ -40,7 +42,7 @@ fn setup(
      commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(2.0, 7.5, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
-    });
+    }).insert(GizmoCamera);
 
       // light
     commands.spawn(PointLightBundle {
@@ -115,7 +117,8 @@ fn setup(
             */
 
           tile_edit_resource.set_selected_tool(
-           Some( TileEditingTool::BuildTile( BuildTileTool::PolygonTileBuild ))
+         //  Some( TileEditingTool::BuildTile( BuildTileTool::PolygonTileBuild ))
+          Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyTileHeight ))
             );
 
      /* commands.spawn(

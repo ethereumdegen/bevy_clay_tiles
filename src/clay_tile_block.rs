@@ -1,5 +1,6 @@
 
 
+use crate::tile_gizmos::ClayTileBlockSelectable;
 use bevy::render::render_resource::Origin3d;
 use serde::Serialize;
 use serde::Deserialize;
@@ -15,7 +16,7 @@ use crate::tile_material::TileMaterial;
  
  
   
-
+ 
  
 use bevy::prelude::*;
 
@@ -36,8 +37,8 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 
     		(
                 build_tile_block_meshes,
-              
-
+                init_build_clay_tile_block, 
+            
                 ).chain().run_if(any_with_component::<ClayTileBlock> )
 
 
@@ -81,7 +82,8 @@ pub struct ClayTileBlockBuilder {
     pub polygon_points: Vec<IVec2>,
 
      pub height_level: u32, 
-     pub tile_type_index: u32 
+     pub tile_type_index: u32,
+     pub mesh_height: f32, 
 
 
 }
@@ -95,7 +97,8 @@ fn default() -> Self {
     Self{
         polygon_points: Vec::new(),
         height_level: 0,
-        tile_type_index: 0
+        tile_type_index: 0,
+        mesh_height: 0.2
     }
 
  }
@@ -174,6 +177,7 @@ impl ClayTileBlockBuilder {
                 polygon_points: polygon_points_ccw,
                 height_level: self.height_level.clone(), 
                 tile_type_index: self.tile_type_index.clone() ,
+                mesh_height: self.mesh_height.clone(), 
 
 
                 ..default()
@@ -231,9 +235,14 @@ fn render_gizmos_for_clay_tile_block_builders(
 fn update_clay_tile_block_builders(
     mut commands: Commands,
     query: Query<(Entity, &ClayTileBlockBuilder, Option<&Parent>)>,
+
+     tile_edit_resource: Res<TileEditingResource>,
 ) {
     for (entity, builder, parent_option) in query.iter() {
         if builder.is_complete() {
+
+            let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
+
             // Build the ClayTileBlock from the builder
             if let Some(clay_tile_block) = builder.build() {
                 // Despawn the builder entity
@@ -243,9 +252,12 @@ fn update_clay_tile_block_builders(
                let new_block =  commands.spawn(SpatialBundle::default())
                
                 .insert( clay_tile_block )
-                .insert( RebuildTileBlock ) .id() ;
+                //.insert( RebuildTileBlock ) 
 
-                if let Some(parent) = parent_option.map(|p| p.get() ){ 
+                .id() ;
+
+              
+                if let Some(parent) = new_tile_parent_entity{ 
                     commands.entity(new_block)
                       .set_parent( parent ) ;
                   }
@@ -257,6 +269,20 @@ fn update_clay_tile_block_builders(
 
 
 
+fn init_build_clay_tile_block (
+    mut commands: Commands,
+    tile_block_query: Query< Entity ,( With<ClayTileBlock>,  Without<ClayTileMesh> ) >,
+) {
+    for  entity   in tile_block_query.iter() {
+        if let Some(mut cmd) = commands.get_entity(entity){ 
+
+            cmd.insert(RebuildTileBlock); 
+        }
+    }
+}
+
+
+
 
 
 pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
@@ -264,7 +290,8 @@ pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 
 
 //should spatially offset the layer at the appropriate height
-#[derive(Component,Clone,Serialize,Deserialize)]
+#[derive(Component,Clone,Serialize,Deserialize,Reflect)]
+#[reflect(Component)]
 pub struct ClayTileBlock {
 
         //should always be counterclockwise ! 
@@ -457,8 +484,9 @@ pub fn build_tile_block_meshes(
                      //   unlit: true,  // need this for now ..
 
 
-                        reflectance: 0.2,
-                        perceptual_roughness: 0.7,
+                        reflectance: 0.1,
+                        perceptual_roughness: 0.85,
+
                     //    specular_transmission: 0.1, //kills the depth buffer
 
                         // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
@@ -505,7 +533,7 @@ pub fn build_tile_block_meshes(
              
             let terrain_mesh_handle = meshes.add(mesh);
 
-            let mesh_bundle = commands
+           /* let mesh_bundle = commands
                 .spawn(TilePbrBundle {
                     mesh: terrain_mesh_handle,
                     material: tile_material.clone(),
@@ -514,6 +542,7 @@ pub fn build_tile_block_meshes(
                     ..default()
                 })
                 .insert(ClayTileMesh)
+                .insert( ClayTileBlockSelectable )
                 .id();
 
 
@@ -522,6 +551,20 @@ pub fn build_tile_block_meshes(
 
             commands.entity(block_entity)
              .add_child(mesh_bundle);
+
+    */
+
+             commands.entity(block_entity)
+             .insert(  (
+                terrain_mesh_handle,
+                 tile_material.clone(),
+                    ClayTileMesh,
+                    ClayTileBlockSelectable,
+                    Name::new("ClayTileBlock")
+
+                )  )
+
+             ;
             
            // chunk_data.chunk_state = ChunkState::FullyBuilt;
 

@@ -1,4 +1,6 @@
 
+use crate::tile_gizmos::tile_gizmos_plugin;
+use transform_gizmo_bevy::TransformGizmoPlugin;
 use crate::tiles::ClayTilesConfigResource;
 use crate::tiles_config::ClayTilesConfig;
 use crate::tiles::ClayTilesTexturingResource;
@@ -22,6 +24,7 @@ use bevy::{asset::load_internal_asset, prelude::*};
  pub mod tile_edit;
  pub mod pre_mesh;
  pub mod clay_tile;
+ pub mod tile_gizmos;
  
 
 pub struct BevyClayTilesPlugin {
@@ -45,12 +48,18 @@ impl Plugin for BevyClayTilesPlugin {
         app.add_plugins(MaterialPlugin::<TileMaterialExtension>::default());
        
        if !app.is_plugin_added::<CursorRayPlugin>() {
-            app.add_plugins(CursorRayPlugin);
+             app.add_plugins(CursorRayPlugin);
         }
+
+     /*   if !app.is_plugin_added::<TransformGizmoPlugin>(){
+            
+            app.add_plugins(TransformGizmoPlugin);
+        }*/
 
         app
         .add_plugins(clay_tile_block_plugin)        
         .add_plugins(tile_edit_plugin)
+        .add_plugins(tile_gizmos_plugin)
 
 
         .add_systems(Update,  (
