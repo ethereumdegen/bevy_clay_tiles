@@ -113,6 +113,12 @@ fn default() -> Self {
 impl ClayTileBlockBuilder {
 
 
+    pub fn get_origin_point(&self) -> Option<&IVec2> {
+
+        self.polygon_points.first()
+
+    }
+
 
     pub fn points_are_counterclockwise(&self) -> bool {
         let points = &self.polygon_points;

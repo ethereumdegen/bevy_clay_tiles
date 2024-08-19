@@ -215,10 +215,10 @@ pub fn extrude_2d_polygon_to_3d(
             let horizontal_distance_uv_factor =  horizontal_distance;
             let vertical_distance_uv_factor =  vertical_distance;
 
-                info!("uv horizontal_distance_uv_factor {:?}", horizontal_distance_uv_factor );
+              //  info!("uv horizontal_distance_uv_factor {:?}", horizontal_distance_uv_factor );
 
 
-                   info!("uv vertical_distance_uv_factor {:?}", vertical_distance_uv_factor );
+                //   info!("uv vertical_distance_uv_factor {:?}", vertical_distance_uv_factor );
           /*  let uv_coords = [
                
                 [uv_coords_width_scaled * horizontal_distance_uv_factor, 0.0],

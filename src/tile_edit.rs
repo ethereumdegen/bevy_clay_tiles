@@ -6,6 +6,7 @@ use crate::clay_tile::ClayTileComponent;
  
 use core::f32::consts::PI;
 use bevy::color::palettes::tailwind;
+use bevy::math::VectorSpace;
 use bevy::{prelude::* };
 use geo::{MultiPolygon, BooleanOps, CoordsIter, LineString, OpType, Polygon};
 use bevy::render::mesh::Indices;
@@ -20,6 +21,7 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
     app
 
         .init_resource::<TileEditingResource>()
+        .init_resource::<TileBuildPreviewResource>()
 
         .add_event::<TileSelectionEvent>()
 
@@ -35,6 +37,10 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
                 listen_for_input_events,
                 handle_polygon_tile_build_events,
                 handle_rectangle_tile_build_events, 
+
+                update_tile_build_preview,
+
+
 
 
               
@@ -74,6 +80,17 @@ pub enum GridInteractionType{
      Cancel
 
 }
+
+
+#[derive(Resource ,Default)]
+pub struct TileBuildPreviewResource{ 
+     
+    drag_origin: Option<IVec2>,
+    current_position: Option<IVec2> ,
+
+}
+
+
 
 #[derive(Resource )]
 pub struct TileEditingResource{ 
@@ -356,7 +373,7 @@ fn listen_for_input_events (
 
 
 fn render_cursor_gizmo (
-    tile_edit_resource: Res<TileEditingResource>,
+   tile_edit_resource: Res<TileEditingResource>,
  
 
    cursor_ray: Res<CursorRay>,
@@ -628,4 +645,121 @@ fn handle_rectangle_tile_build_events(
             }
         }
     }
+}
+
+
+fn update_tile_build_preview(
+   // mut commands: Commands,
+   // mut evt_reader: EventReader<BuildGridInteractionEvent>,
+    tile_edit_resource: Res<TileEditingResource>,
+
+
+    mut tile_build_preview: ResMut<TileBuildPreviewResource>,
+      builder_query: Query<&  ClayTileBlockBuilder>,
+
+
+   cursor_ray: Res<CursorRay>,
+
+   mut gizmos: Gizmos,
+
+   time: Res<Time>
+  
+) {
+
+  let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
+
+
+  let time_elapsed = time.elapsed_seconds ();
+  let color_factor = (time_elapsed % 6.0)/ 6.0;
+
+
+  let current_color = LinearRgba::rgb(
+    ((color_factor  + 0.0)  )% 1.0, 
+    ((color_factor  + 0.33)  ) % 1.0, 
+    ((color_factor  + 0.66)   )% 1.0
+    );
+
+  let Some(EditingTool::BuildTile(BuildTileTool::RectangleTileBuild)) = &tile_edit_resource.selected_tool else{return};
+     
+
+     let build_grid_height  =   tile_edit_resource.build_grid_data.height_offset as f32;
+     let grid_enabled =  tile_edit_resource.get_build_grid_enabled();
+
+     let render_cursor_gizmo= tile_edit_resource.show_cursor_gizmo();
+
+     let mut intersection_point:Option<IVec2> = None ;
+
+     if  grid_enabled && render_cursor_gizmo {
+ //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
+
+        if let Some(cursor_ray) = **cursor_ray {
+            let origin = &cursor_ray.origin; 
+            let direction = &cursor_ray.direction;
+
+
+           // let point_intersecting_build_grid = ;
+            if direction.y.abs() > 1e-6 {  // Ensure we're not dividing by zero
+                let t = (build_grid_height - origin.y) / direction.y;
+                let point_intersecting_build_grid = *origin + *direction * t;
+                    
+
+
+                    intersection_point = Some( IVec2::new(
+                        point_intersecting_build_grid.x.round() as i32,
+                        point_intersecting_build_grid.z.round() as i32,
+                    ) ); 
+
+                   // intersection_position = Some( IVec2::new(rounded_position.x ,     rounded_position.y  ) );
+ 
+                  
+                
+            }
+        }
+     }  
+
+     let mut origin_point = None;
+
+     if let Some( clay_tile_block_builder ) = builder_query.get_single().ok() {
+ 
+        origin_point = clay_tile_block_builder.get_origin_point();
+
+     }
+
+
+
+
+     if let Some(origin_point) = origin_point {
+
+
+        if let Some(intersection_point) = intersection_point {
+  
+            let dimensions = intersection_point.clone() - *origin_point ;
+            let origin_f32 = Vec3::new( origin_point.x as f32,  1.0 * build_grid_height + 0.01 , origin_point.y as f32);
+            let endpoint_f32  = Vec3::new( intersection_point.x as f32,  1.0 * build_grid_height + 0.01 , intersection_point.y as f32);
+
+            let centroid = origin_f32.lerp( endpoint_f32 , 0.5);
+
+             gizmos.rect(
+                centroid,
+                Quat::from_rotation_x(PI / 2.),
+                Vec2::new( dimensions.x as f32 , dimensions.y as f32)   ,
+                current_color,
+            );
+
+ 
+
+
+
+        } 
+
+
+     }
+
+
+
+ 
+                   
+  
+              
+    
 }
