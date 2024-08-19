@@ -1,4 +1,5 @@
 
+use crate::tiles::ClayTilesTypesConfigResource;
 use crate::tile_gizmos::tile_gizmos_plugin;
 use transform_gizmo_bevy::TransformGizmoPlugin;
 use crate::tiles::ClayTilesConfigResource;
@@ -21,6 +22,7 @@ use bevy::{asset::load_internal_asset, prelude::*};
  pub mod clay_tile_block; 
  pub mod tile_material;
  pub mod tiles_config;
+ pub mod tile_types_config;
  pub mod tile_edit;
  pub mod pre_mesh;
  pub mod clay_tile;
@@ -35,7 +37,7 @@ impl Plugin for BevyClayTilesPlugin {
     fn build(&self, app: &mut App) {
 
         app.init_resource::<ClayTilesTexturingResource>();
-
+        app.insert_resource(ClayTilesTypesConfigResource::default()); 
         app.insert_resource(ClayTilesConfigResource(self.config.clone())) ;
         //app.init_resource::<ClayTilesConfigResource>();
 

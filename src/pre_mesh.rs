@@ -189,11 +189,15 @@ pub fn extrude_2d_polygon_to_3d(
         let uv_coords_height = height.clone() as f32;
 
        // let uv_coords_height_scaled = 1.0 / ( uv_coords_height / (1.0 - bevel_factor as f32) );
-       let uv_coords_height_scaled = 0.5 ;
+       let uv_coords_height_scaled = 1.0 ;
         let uv_coords_width_scaled = 1.0  ;
 
     // Add triangles for the sides --uv are broken ? 
         for i in 0..shape_2d_vertex_count {
+
+
+
+
             let next_index = (i + 1) % shape_2d_vertex_count;
             let positions  = [
                 
@@ -201,14 +205,30 @@ pub fn extrude_2d_polygon_to_3d(
                 bottom_vertices[i],
                 top_vertices[next_index],
             ]; 
-           
-
             
-            let uv_coords = [
+            let horizontal_distance = Vec2::new( bottom_vertices[i][0], bottom_vertices[i][2] ).distance(  Vec2::new( bottom_vertices[next_index][0], bottom_vertices[next_index][2] ) ); 
+                
+
+            let vertical_distance = (bottom_vertices[i][1] as f32 - top_vertices[i][1]as f32).abs()  ; 
+            
+
+            let horizontal_distance_uv_factor =  horizontal_distance;
+            let vertical_distance_uv_factor =  vertical_distance;
+
+                info!("uv horizontal_distance_uv_factor {:?}", horizontal_distance_uv_factor );
+
+
+                   info!("uv vertical_distance_uv_factor {:?}", vertical_distance_uv_factor );
+          /*  let uv_coords = [
                
-                [uv_coords_width_scaled, 0.0],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, 0.0],
                  [0.0, 0.0],
-                [uv_coords_width_scaled, uv_coords_height_scaled],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, uv_coords_height_scaled * vertical_distance_uv_factor],
+            ];*/
+            let uv_coords = [
+                [0.0, uv_coords_height_scaled * vertical_distance_uv_factor],
+                [0.0, 0.0],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, uv_coords_height_scaled * vertical_distance_uv_factor],
             ];
             premesh.add_triangle(positions , uv_coords);
 
@@ -218,11 +238,16 @@ pub fn extrude_2d_polygon_to_3d(
                 bottom_vertices[i],
                 bottom_vertices[next_index],
             ];
-            let uv_coords = [
+           /* let uv_coords = [
                
-                [uv_coords_width_scaled, uv_coords_height_scaled],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, uv_coords_height_scaled * vertical_distance_uv_factor],
                  [0.0, 0.0],
-                [0.0, uv_coords_height_scaled],
+                [0.0, uv_coords_height_scaled * vertical_distance_uv_factor],
+            ];*/
+            let uv_coords = [
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, 0.0],
+                [0.0, 0.0],
+                [uv_coords_width_scaled * horizontal_distance_uv_factor, uv_coords_height_scaled * vertical_distance_uv_factor],
             ];
             premesh.add_triangle(positions , uv_coords);
         }

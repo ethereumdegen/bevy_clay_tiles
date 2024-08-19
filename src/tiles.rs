@@ -1,5 +1,7 @@
 
 
+use crate::tile_types_config::TileTypeConfig;
+use bevy::utils::HashMap;
 use crate::tiles_config::ClayTilesConfig;
 use bevy::prelude::*;
 
@@ -23,6 +25,18 @@ impl ClayTilesConfigResource {
         &self.0
     }
 }
+
+
+
+
+#[derive(Resource, Default)]
+pub struct ClayTilesTypesConfigResource {
+    
+    
+  pub tile_type_data: HashMap<usize, TileTypeConfig>
+}
+
+
 
 
 #[derive(Resource, Default)]

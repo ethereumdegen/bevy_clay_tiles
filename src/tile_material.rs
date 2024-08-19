@@ -36,18 +36,26 @@ pub struct TileMaterial {
       #[uniform(20)]
      pub color_texture_expansion_factor: f32,
 
+      #[uniform(21)]
+     pub diffuse_color_tint: Vec4,
+
+       #[uniform(22)]
+     pub tile_texture_index: u32,
+
+     
+
     /*#[uniform(20)]
     pub chunk_uniforms: ChunkMaterialUniforms,
 
     #[uniform(21)]
     pub tool_preview_uniforms: ToolPreviewUniforms,
 	*/
-    #[texture(22, dimension = "2d_array")]
-    #[sampler(23)]
-    pub diffuse_texture: Option<Handle<Image>>,
-
     #[texture(24, dimension = "2d_array")]
     #[sampler(25)]
+    pub diffuse_texture: Option<Handle<Image>>,
+
+    #[texture(26, dimension = "2d_array")]
+    #[sampler(27)]
     pub normal_texture: Option<Handle<Image>>,
 
      

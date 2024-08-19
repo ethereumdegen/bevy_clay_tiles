@@ -1,6 +1,8 @@
 
 
 use crate::tile_gizmos::ClayTileBlockSelectable;
+use crate::tile_types_config;
+use crate::tiles::ClayTilesTypesConfigResource;
 use bevy::render::render_resource::Origin3d;
 use serde::Serialize;
 use serde::Deserialize;
@@ -178,7 +180,7 @@ impl ClayTileBlockBuilder {
                 height_level: self.height_level.clone(), 
                 tile_type_index: self.tile_type_index.clone() ,
                 mesh_height: self.mesh_height.clone(), 
-
+              //  uv_expansion_factor : 0.25, // for now 
 
                 ..default()
             }
@@ -303,7 +305,7 @@ pub struct ClayTileBlock {
 
     pub height_level: u32, 
 
-    pub uv_expansion_factor: f32 ,
+  //  pub uv_expansion_factor: f32 ,
 
     pub tile_type_index: u32,  
 
@@ -318,7 +320,7 @@ impl Default for ClayTileBlock {
             mesh_height: 0.2,
             mesh_bevel_factor: 0.0,
             height_level : 0 ,
-            uv_expansion_factor: 1.0,
+         //   uv_expansion_factor: 1.0,
             tile_type_index: 0 
         }
      }
@@ -441,9 +443,11 @@ pub fn build_tile_block_meshes(
 	>, 
 
 	 mut meshes: ResMut<Assets<Mesh>>,
-   tile_texture_resource: Res <ClayTilesTexturingResource>,
-  //  tile_root_query: Query<(&ClayTilesRoot, &ClayTilesConfig)>,
+    tile_texture_resource: Res <ClayTilesTexturingResource>,
+  
     mut tile_materials: ResMut<Assets<TileMaterialExtension>>,
+
+    tile_types_config: Res<ClayTilesTypesConfigResource>,
 
 
 	){
@@ -472,7 +476,15 @@ pub fn build_tile_block_meshes(
 		let tile_diffuse_texture = tile_texture_resource.get_diffuse_texture_image().clone();
             info!("building clay tile mesh");
 
-        let color_texture_expansion_factor = clay_tile_block.uv_expansion_factor;
+
+
+            // get uv exp factor from tile_types_config 
+
+        let color_texture_expansion_factor = 0.25;
+        let diffuse_color_tint = LinearRgba::rgb(1.0, 1.0,1.0);
+        let tile_texture_index = 0; //load from .. the config ! 
+
+
 
 	    let tile_material: Handle<TileMaterialExtension> =
                 tile_materials.add(ExtendedMaterial {
@@ -484,7 +496,7 @@ pub fn build_tile_block_meshes(
                      //   unlit: true,  // need this for now ..
 
 
-                        reflectance: 0.1,
+                        reflectance: 0.05,
                         perceptual_roughness: 0.85,
 
                     //    specular_transmission: 0.1, //kills the depth buffer
@@ -505,6 +517,9 @@ pub fn build_tile_block_meshes(
 
                         color_texture_expansion_factor:color_texture_expansion_factor ,
                         diffuse_texture: tile_diffuse_texture.clone(),
+                        diffuse_color_tint: diffuse_color_tint.to_vec4(),
+
+                        tile_texture_index,
                        
                         ..default()
                     },

@@ -78,17 +78,23 @@ var occlusion_sampler: sampler;
 @group(2) @binding(20)
 var<uniform>  color_texture_expansion_factor:   f32;
 
+@group(2) @binding(21)
+var<uniform>  diffuse_color_tint:  vec4<f32>;
+
+@group(2) @binding(22)
+var<uniform>  tile_texture_index: u32; 
+
 //@group(2) @binding(21)
 //var<uniform> tool_preview_uniforms: ToolPreviewUniforms;
 
-@group(2) @binding(22)
+@group(2) @binding(24)
 var base_color_texture: texture_2d_array<f32>;
-@group(2) @binding(23)
+@group(2) @binding(25)
 var base_color_sampler: sampler;
 
-@group(2) @binding(24)
+@group(2) @binding(26)
 var normal_texture: texture_2d_array<f32>;
-@group(2) @binding(25)
+@group(2) @binding(27)
 var normal_sampler: sampler;
 
 
@@ -110,17 +116,17 @@ fn fragment(
     
     let mesh_uv =  color_texture_expansion_factor * mesh.uv;
      
-     let tile_index = 0; // do uv coord stuff ?
+    // let tile_texture_index = 0; // do uv coord stuff ?
  
-    let color_from_diffuse_texture = textureSample(base_color_texture, base_color_sampler, mesh_uv, tile_index);
+    let color_from_diffuse_texture = textureSample(base_color_texture, base_color_sampler, mesh_uv, tile_texture_index);
      
 
-    let normal_from_texture = textureSample(normal_texture, normal_sampler, mesh_uv, tile_index); 
+    let normal_from_texture = textureSample(normal_texture, normal_sampler, mesh_uv, tile_texture_index); 
     
  
     
 
-    let blended_color = color_from_diffuse_texture  ;
+    let blended_color = color_from_diffuse_texture  * diffuse_color_tint ;
     var blended_normal = normal_from_texture  ;
      blended_normal =  normalize(blended_normal); // FOR NOW  // normalize(blended_normal); 
                     
