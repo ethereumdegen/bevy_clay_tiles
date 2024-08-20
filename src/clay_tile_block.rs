@@ -299,7 +299,7 @@ pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 
 
 //should spatially offset the layer at the appropriate height
-#[derive(Component,Clone,Serialize,Deserialize,Reflect)]
+#[derive(Component,Clone,Serialize,Deserialize,Reflect,Debug)]
 #[reflect(Component)]
 pub struct ClayTileBlock {
 
