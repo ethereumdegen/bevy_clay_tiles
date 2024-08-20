@@ -37,9 +37,11 @@ pub(crate) fn tile_edit_plugin(app: &mut App) {
                 listen_for_input_events,
                 handle_polygon_tile_build_events,
                 handle_rectangle_tile_build_events, 
+                handle_linear_tile_build_events,
 
-                update_tile_build_preview,
+                update_tile_build_preview_rectangle,
 
+                   update_tile_build_preview_linear,
 
 
 
@@ -246,6 +248,7 @@ pub enum EditingTool {
 #[derive(Debug, Clone)]
 pub enum BuildTileTool { 
     RectangleTileBuild , 
+    LinearTileBuild, 
     PolygonTileBuild ,   
 }
 
@@ -559,19 +562,10 @@ fn handle_polygon_tile_build_events(
                 }
 
                 GridInteractionType::Cancel => {
-
-
-                    let position = IVec2::new(
-                        evt.coordinates.x.round() as i32,
-                        evt.coordinates.y.round() as i32,
-                    ); 
+ 
                     
                     if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
-                        // Add the point to the existing builder
-                       // builder.polygon_points.clear();
-                       // builder.polygon_points.push(position);
-
-
+                      
                        if let Some(mut cmd) = commands.get_entity(builder_entity){
                            cmd.despawn_recursive();
                        }
@@ -590,7 +584,7 @@ fn handle_rectangle_tile_build_events(
     mut commands: Commands,
     mut evt_reader: EventReader<BuildGridInteractionEvent>,
     tile_edit_resource: Res<TileEditingResource>,
-    mut builder_query: Query<&mut ClayTileBlockBuilder>,
+    mut builder_query: Query<(Entity,&mut ClayTileBlockBuilder)>,
   // root_query: Query<Entity, With< ClayTilesRoot>>,
 ) {
 
@@ -608,7 +602,7 @@ fn handle_rectangle_tile_build_events(
                     );
 
                     
-                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
                         // Replace the existing point with the new start point
                         builder.polygon_points.clear();
                         builder.polygon_points.push(position);
@@ -637,7 +631,7 @@ fn handle_rectangle_tile_build_events(
                     }
                 }
                 GridInteractionType::Release => {
-                    if let Ok(mut builder) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
                         if let Some(&start_point) = builder.polygon_points.first() {
                             
                             let end_point = IVec2::new(
@@ -659,6 +653,21 @@ fn handle_rectangle_tile_build_events(
                         }
                     }
                 }
+
+                 GridInteractionType::Cancel => {
+ 
+                    
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                      
+                       if let Some(mut cmd) = commands.get_entity(builder_entity){
+                           cmd.despawn_recursive();
+                       }
+                    }  
+
+
+
+                }
+
                 _ => {}
             }
         }
@@ -666,13 +675,141 @@ fn handle_rectangle_tile_build_events(
 }
 
 
-fn update_tile_build_preview(
-   // mut commands: Commands,
-   // mut evt_reader: EventReader<BuildGridInteractionEvent>,
+
+fn handle_linear_tile_build_events(
+    mut commands: Commands,
+    mut evt_reader: EventReader<BuildGridInteractionEvent>,
+    tile_edit_resource: Res<TileEditingResource>,
+    mut builder_query: Query<(Entity,&mut ClayTileBlockBuilder)>,
+  // root_query: Query<Entity, With< ClayTilesRoot>>,
+) {
+
+  let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
+
+
+
+    if let Some(EditingTool::BuildTile(BuildTileTool::LinearTileBuild)) = &tile_edit_resource.selected_tool {
+        for evt in evt_reader.read() {
+            match evt.interaction_type {
+                GridInteractionType::Press => {
+                    let position = IVec2::new(
+                        evt.coordinates.x.round() as i32,
+                        evt.coordinates.y.round() as i32,
+                    );
+
+                    
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                        // Replace the existing point with the new start point
+                        builder.polygon_points.clear();
+                        builder.polygon_points.push(position);
+                    } else {
+
+                        let height_level = tile_edit_resource.get_build_layer_height() ;
+                        let tile_type_index = tile_edit_resource.get_build_tile_type();
+                          let mesh_height = tile_edit_resource.get_build_mesh_height();
+
+                        // No builder exists, create a new one with the first point
+                        let block_builder_entity = commands.spawn((
+                            SpatialBundle::default(),
+                            ClayTileBlockBuilder {
+                                polygon_points: vec![position],
+                                height_level,
+                                tile_type_index,
+                                mesh_height 
+                            },
+                            // Additional components can be added here
+                        )).id() ;
+
+                         if let Some( new_tile_parent_entity ) = new_tile_parent_entity {
+
+                            commands.entity(block_builder_entity).set_parent( new_tile_parent_entity );
+                        }
+                    }
+                }
+                GridInteractionType::Release => {
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                        if let Some(&start_point) = builder.polygon_points.first() {
+                            
+                            let end_point = IVec2::new(
+                                evt.coordinates.x.round() as i32,
+                                evt.coordinates.y.round() as i32,
+                            );
+
+                            
+                           let direction = end_point - start_point;
+                            let is_diagonal = direction.x.abs() == direction.y.abs();
+
+                            let mut thickness = 1; // Default thickness
+
+                            // Scale thickness based on angle to ensure minimum wall thickness
+                            let angle = (direction.y as f32).atan2(direction.x as f32).abs();
+                            let min_thickness = 0.5; // Minimum thickness is half the tile width
+
+                            // Increase thickness for shallow angles
+                            if !is_diagonal {
+                                if direction.x != 0 && direction.y != 0 {
+                                    thickness = (min_thickness / angle.cos()).max(1.0).round() as i32;
+                                }
+                            }
+
+                            let mut points = vec![start_point];
+
+                            if is_diagonal {
+                                let offset = IVec2::new(-direction.y.signum(), direction.x.signum()) * thickness;
+
+                                points.push(start_point + offset);
+                                points.push(end_point + offset);
+                                points.push(end_point);
+                            } else {
+                                if direction.x != 0 {
+                                    points.push(IVec2::new(start_point.x, start_point.y + thickness));
+                                    points.push(IVec2::new(end_point.x, end_point.y + thickness));
+                                } else if direction.y != 0 {
+                                    points.push(IVec2::new(start_point.x + thickness, start_point.y));
+                                    points.push(IVec2::new(end_point.x + thickness, end_point.y));
+                                }
+                                points.push(end_point);
+                            }
+
+                            points.push(start_point);
+
+                            builder.polygon_points = points;
+
+
+
+
+                        }
+                    }
+                }
+
+                 GridInteractionType::Cancel => {
+ 
+                    
+                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                      
+                       if let Some(mut cmd) = commands.get_entity(builder_entity){
+                           cmd.despawn_recursive();
+                       }
+                    }  
+
+
+
+                }
+
+                _ => {}
+            }
+        }
+    }
+}
+
+
+fn update_tile_build_preview_rectangle(
+ 
+
     tile_edit_resource: Res<TileEditingResource>,
 
 
-    mut tile_build_preview: ResMut<TileBuildPreviewResource>,
+  //    tile_build_preview: Res<TileBuildPreviewResource>,
       builder_query: Query<&  ClayTileBlockBuilder>,
 
 
@@ -765,6 +902,138 @@ fn update_tile_build_preview(
             );
 
  
+
+
+
+        } 
+
+
+     }
+
+
+
+ 
+                   
+  
+              
+    
+}
+
+
+
+
+
+fn update_tile_build_preview_linear(
+ 
+
+    tile_edit_resource: Res<TileEditingResource>,
+ 
+    builder_query: Query<&  ClayTileBlockBuilder>,
+
+
+   cursor_ray: Res<CursorRay>,
+
+   mut gizmos: Gizmos,
+
+   time: Res<Time>
+  
+) {
+
+  let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
+
+
+  let time_elapsed = time.elapsed_seconds ();
+  let color_factor = (time_elapsed % 6.0)/ 6.0;
+
+
+  let current_color = LinearRgba::rgb(
+    ((color_factor  + 0.0)  )% 1.0, 
+    ((color_factor  + 0.33)  ) % 1.0, 
+    ((color_factor  + 0.66)   )% 1.0
+    );
+
+  let Some(EditingTool::BuildTile(BuildTileTool::LinearTileBuild)) = &tile_edit_resource.selected_tool else{return};
+     
+
+     let build_grid_height  =   tile_edit_resource.build_grid_data.height_offset as f32;
+     let grid_enabled =  tile_edit_resource.get_build_grid_enabled();
+
+     let render_cursor_gizmo= tile_edit_resource.show_cursor_gizmo();
+
+     let mut intersection_point:Option<IVec2> = None ;
+
+     if  grid_enabled && render_cursor_gizmo {
+ //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
+
+        if let Some(cursor_ray) = **cursor_ray {
+            let origin = &cursor_ray.origin; 
+            let direction = &cursor_ray.direction;
+
+
+           // let point_intersecting_build_grid = ;
+            if direction.y.abs() > 1e-6 {  // Ensure we're not dividing by zero
+                let t = (build_grid_height - origin.y) / direction.y;
+                let point_intersecting_build_grid = *origin + *direction * t;
+                    
+
+
+                    intersection_point = Some( IVec2::new(
+                        point_intersecting_build_grid.x.round() as i32,
+                        point_intersecting_build_grid.z.round() as i32,
+                    ) ); 
+
+                   // intersection_position = Some( IVec2::new(rounded_position.x ,     rounded_position.y  ) );
+ 
+                  
+                
+            }
+        }
+     }  
+
+     let mut origin_point = None;
+
+     if let Some( clay_tile_block_builder ) = builder_query.get_single().ok() {
+ 
+        origin_point = clay_tile_block_builder.get_origin_point();
+
+     }
+
+
+
+
+     if let Some(origin_point) = origin_point {
+
+
+        if let Some(intersection_point) = intersection_point {
+  
+            let direction = (intersection_point - *origin_point).as_vec2();
+            let length = direction.length();
+            let thickness = 0.5; // Set the thickness of the line (can be adjusted)
+
+            let origin_f32 = Vec3::new(
+                origin_point.x as f32,
+                build_grid_height + 0.01,
+                origin_point.y as f32,
+            );
+            let endpoint_f32 = Vec3::new(
+                intersection_point.x as f32,
+                build_grid_height + 0.01,
+                intersection_point.y as f32,
+            );
+
+            let midpoint = origin_f32.lerp(endpoint_f32, 0.5);
+           let rotation_angle = direction.y.atan2(direction.x)  ;
+
+
+           
+           let total_rotation =  Quat::from_rotation_x(PI / 2.) *   Quat::from_rotation_z(rotation_angle);
+
+            gizmos.rect(
+                midpoint,
+                total_rotation, //Quat::from_rotation_x(rotation_angle) * Quat::from_rotation_y(rotation_angle),
+                Vec2::new(length, thickness),
+                current_color,
+            );
 
 
 
