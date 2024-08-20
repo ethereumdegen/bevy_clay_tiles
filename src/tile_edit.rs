@@ -95,6 +95,8 @@ pub struct TileBuildPreviewResource{
 #[derive(Resource )]
 pub struct TileEditingResource{ 
     selected_tool: Option<EditingTool>,
+    tool_enabled: bool,
+
     build_grid_data: TileBuildGridData  ,  
 
     selected_tile_type: usize ,
@@ -109,7 +111,7 @@ impl Default for TileEditingResource {
 
     fn default() -> Self { 
      Self {
-
+        tool_enabled : true ,
         selected_tool: None,
         build_grid_data: TileBuildGridData::default(),
         selected_tile_type: 0 ,
@@ -126,9 +128,16 @@ impl Default for TileEditingResource {
 
 impl TileEditingResource {
 
+
+    pub fn set_tool_enabled(&mut self, enabled : bool ) {
+ 
+        self.tool_enabled = enabled ;
+    }
+
+
     pub fn get_build_grid_enabled(&self) -> bool{
  
-        self.selected_tool.is_some()
+        self.selected_tool.is_some() && self.tool_enabled
     }
 
     pub fn set_build_grid_horizontal_offset( &mut self, offset: Vec2 ){
@@ -209,10 +218,17 @@ impl TileEditingResource {
 
     pub fn show_cursor_gizmo(&self) -> bool {
 
+     
 
-            match self.selected_tool{
+         if self.get_build_grid_enabled() == false {
+            return false ;
+        }
 
-            Some(EditingTool::BuildTile(..) ) => true,
+
+
+        match self.selected_tool{
+
+                 Some(EditingTool::BuildTile(..) ) => true,
             _ => false 
         }
     }
@@ -284,12 +300,12 @@ pub struct TileBuildGridData {
 
      let position_offset  = &tile_edit_resource.build_grid_data.horizontal_offset.xy();
      let height_offset  = &tile_edit_resource.build_grid_data.height_offset;
-     let grid_enabled = &tile_edit_resource.get_build_grid_enabled();
+     let grid_enabled = tile_edit_resource.get_build_grid_enabled();
 
      let x_offset = position_offset.x;
      let z_offset = position_offset.y;
 
-        if *grid_enabled {
+        if grid_enabled {
 
             //bizarre but.. yeah lol . due to quat rot 
           let grid_position = Vec3::new(x_offset,z_offset, -1.0 *  *height_offset as f32);
@@ -322,11 +338,13 @@ fn listen_for_input_events (
   
 ) {
 
+    let tool_enabled = tile_edit_resource.tool_enabled;
+ 
 
      let build_grid_height  =   tile_edit_resource.build_grid_data.height_offset as f32;
      let grid_enabled =  tile_edit_resource.get_build_grid_enabled();
 
-     if  grid_enabled {
+     if  grid_enabled  && tool_enabled {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
         if let Some(cursor_ray) = **cursor_ray {
