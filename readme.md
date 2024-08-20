@@ -14,7 +14,8 @@ cargo add bevy_clay_tiles
 ```
 ![image](https://github.com/user-attachments/assets/e8d28fed-02b0-47e1-971e-8198d6ac5dbf)
 
-  
+  ![image](https://github.com/user-attachments/assets/e0f18271-ccba-479a-a7e5-9c5a7f68b902)
+
 
 
 ### Run example 
