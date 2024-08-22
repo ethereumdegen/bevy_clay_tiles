@@ -410,8 +410,13 @@ impl ClayTileBlock {
        .build() 
        ;
 
-       let generated_tangents =mesh.generate_tangents()
-       .expect("Failed to generate tangents");
+       /*let generated_tangents = mesh.generate_tangents()  ;
+
+       match generated_tangents {
+        Ok(_) => {},
+        Err(error) => warn!("Could not generate mesh tangents {:?}", error)
+
+       };*/
 
         Some(mesh)
 

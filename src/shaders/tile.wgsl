@@ -127,16 +127,17 @@ fn fragment(
     
 
     let blended_color = color_from_diffuse_texture  * diffuse_color_tint ;
-    var blended_normal = normalize ( normal_from_texture  ) ;
-                     
-    let blended_normal_vec3 = blended_normal.rgb;         
+    var blended_normal = normal_from_texture  ;
+     blended_normal =  normalize(blended_normal); // FOR NOW  // normalize(blended_normal); 
+                    
+   let blended_normal_vec3 = vec3<f32>( blended_normal.r, blended_normal.g, blended_normal.b );         
    
    
     var pbr_input = pbr_input_from_standard_material(mesh, is_front);
         
     pbr_input.material.base_color =  blended_color;
   
-     let double_sided = (pbr_input.material.flags & STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT) != 0u;
+      let double_sided = (pbr_input.material.flags & STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT) != 0u;
  
      
     pbr_input.world_position = mesh.world_position ;
@@ -148,7 +149,7 @@ fn fragment(
 
 // https://github.com/bevyengine/bevy/blob/main/assets/shaders/array_texture.wgsl 
     
-    let tangent = normalize( blended_normal_vec3 );
+   /* let tangent = normalize( blended_normal_vec3 );
 
     //we mix the normal with our sample so shadows are affected by the normal map ! 
     let normal_mixed = mix( normalize( mesh.world_normal ) , normalize( tangent ) , 0.7 );
@@ -161,18 +162,9 @@ fn fragment(
         pbr_bindings::normal_map_texture,
          pbr_bindings::normal_map_sampler, mesh.uv, view.mip_bias).rgb;
 
-    
+    */
  
-    pbr_input.N =  apply_normal_mapping(
-        pbr_input.material.flags,
-       
-       TBN, 
-        
-        double_sided,
-        is_front,
-        
-        Nt
-    );
+    pbr_input.N =   blended_normal_vec3;
  
 
     pbr_input.V =  calculate_view(mesh.world_position, pbr_input.is_orthographic);
