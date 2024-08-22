@@ -481,7 +481,9 @@ pub fn build_tile_block_meshes(
 
 		//let tile_diffuse_texture = clay_tiles_root.terrain_data_loaded
 		let tile_diffuse_texture = tile_texture_resource.get_diffuse_texture_image().clone();
-            info!("building clay tile mesh");
+        let tile_normal_texture = tile_texture_resource.get_normal_texture_image().clone();
+        
+        info!("building clay tile mesh");
 
         let tile_type_id = clay_tile_block.tile_type_index;
 
@@ -504,8 +506,7 @@ pub fn build_tile_block_meshes(
                        // opaque_render_method: OpaqueRendererMethod::Auto,
                        // alpha_mode: AlphaMode::Mask(0.1),
                         
-                     //   unlit: true,  // need this for now ..
-
+                     //   unlit: true,   
 
                         reflectance: 0.05,
                         perceptual_roughness: 0.85,
@@ -529,6 +530,8 @@ pub fn build_tile_block_meshes(
                         color_texture_expansion_factor:*color_texture_expansion_factor ,
                         diffuse_texture: tile_diffuse_texture.clone(),
                         diffuse_color_tint: diffuse_color_tint.to_vec4(),
+
+                        normal_texture: tile_normal_texture.clone(),
 
                         tile_texture_index: *tile_diffuse_texture_index,
                        

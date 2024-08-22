@@ -27,6 +27,8 @@ fn main() {
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
         .add_systems(Update, rotate_camera  )
+
+         .add_systems(Update, update_directional_light_position)
         .run();
 }
 
@@ -44,20 +46,27 @@ fn setup(
         ..default()
     }).insert(GizmoCamera);
 
-      // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            shadows_enabled: false,
-            ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
-    });
+         
 
         commands.insert_resource(AmbientLight {
         color: Color::srgb(1.0,1.0,1.0),
-        brightness: 700.0,
+        brightness: 122.0,
     });
+
+        // light
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            //shadow_depth_bias: 0.5,
+            //shadow_normal_bias: 0.5,
+            illuminance: 700.0,  
+            color: Color::srgba(1.0, 1.0, 1.0, 1.0),
+
+            ..default()
+        },
+        transform: Transform::from_xyz(4.0, 6.0, 4.0),
+        ..default()
+    });
+    // light
  
 
  
@@ -112,3 +121,31 @@ fn rotate_camera(mut query: Query<&mut Transform, With<Camera>>, time: Res<Time>
 }
 
 
+
+
+fn update_directional_light_position(
+    mut query: Query<&mut Transform, With<DirectionalLight>>,
+   
+    time: Res<Time>,
+) {
+
+    let current_time = time.elapsed();
+
+
+ //   let delta_time = time.delta_seconds();
+    
+    let SECONDS_IN_A_CYCLE = 10.0;
+
+    let angle = (current_time.as_millis() as f32 / (SECONDS_IN_A_CYCLE* 1000.0) ) * std::f32::consts::PI * 2.0; // Convert time to radians
+   
+    let radius = 20.0; // Adjust the radius of the sun's orbit
+    let x = angle.cos() * radius;
+    let y = angle.sin() * radius + 10.0; // Adjust the height of the sun
+    let z = 0.0;
+
+    for mut transform in query.iter_mut() {
+
+        transform.translation = Vec3::new(x, y, z);
+        transform.look_at(Vec3::ZERO, Vec3::Y);
+    }
+}

@@ -12,7 +12,7 @@ use bevy_mod_raycast::prelude::CursorRayPlugin;
 use crate::tile_edit::tile_edit_plugin;
 
 use crate::clay_tile_block::clay_tile_block_plugin;
-use crate::tiles::load_tiles_texture_from_image;
+use crate::tiles::{load_tiles_diffuse_texture_from_image, load_tiles_normal_texture_from_image};
 use crate::tile_material::TileMaterialExtension;
 use crate::tile_material::TILE_SHADER_HANDLE;
 //use crate::tile_edit::tile_edit_plugin; 
@@ -73,11 +73,9 @@ impl Plugin for BevyClayTilesPlugin {
 
 
         .add_systems(Update,  (
-
-            load_tiles_texture_from_image
-
-
-            ).chain())
+            load_tiles_diffuse_texture_from_image,
+            load_tiles_normal_texture_from_image  
+          ).chain())
 
 
         ; 
