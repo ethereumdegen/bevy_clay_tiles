@@ -17,6 +17,23 @@ use bevy::render::texture::{
 
 
 
+pub(crate) fn tiles_texturing_plugin(app: &mut App) {
+    app
+
+     .add_systems(Startup,  (
+            load_tiles_diffuse_texture_from_image,
+            load_tiles_normal_texture_from_image  
+          ).chain())
+
+
+        .add_systems(Update,  (
+            finalize_tiles_diffuse_texture_from_image,
+            finalize_tiles_normal_texture_from_image  
+          ).chain())
+
+    ;
+}
+
 #[derive(Resource, Default)]
 pub struct ClayTilesConfigResource  (pub ClayTilesConfig) ;
 
@@ -80,11 +97,68 @@ pub struct ClayTilesTexturingResource {
       pub fn get_normal_texture_image(&self) -> &Option<Handle<Image>> {
         &self.normal_image_handle
     }
+
+
+    pub fn textures_are_ready(&self) -> bool {
+
+        self.diffuse_image_finalized && self.normal_image_finalized 
+    }
 }
  
 
 
+
 pub fn load_tiles_diffuse_texture_from_image(
+     config_resource: ResMut<ClayTilesConfigResource>,
+    mut tile_texture_resource: ResMut<ClayTilesTexturingResource>,
+ //   mut tile_root_query: Query<(&mut ClayTilesRoot, &ClayTilesConfig)>,
+    asset_server: Res<AssetServer>,
+  //  mut images: ResMut<Assets<Image>>,
+    //  materials: Res <Assets<TerrainMaterialExtension>>,
+) {
+
+    let tiles_config = config_resource.get_config();
+    
+    //for (mut tiles_data, tiles_config) in tile_root_query.iter_mut() {
+        if tile_texture_resource.diffuse_image_handle.is_none() {
+            let array_texture_path = &tiles_config.diffuse_texture_path;
+
+            let tex_image = asset_server.load(AssetPath::from_path(array_texture_path));
+            tile_texture_resource.diffuse_image_handle = Some(tex_image);
+        }
+
+        
+}
+
+
+pub fn load_tiles_normal_texture_from_image(
+     config_resource: ResMut<ClayTilesConfigResource>,
+    mut tile_texture_resource: ResMut<ClayTilesTexturingResource>,
+ //   mut tile_root_query: Query<(&mut ClayTilesRoot, &ClayTilesConfig)>,
+    asset_server: Res<AssetServer>,
+   // mut images: ResMut<Assets<Image>>,
+    //  materials: Res <Assets<TerrainMaterialExtension>>,
+) {
+
+    let tiles_config = config_resource.get_config();
+    
+    //for (mut tiles_data, tiles_config) in tile_root_query.iter_mut() {
+        if tile_texture_resource.normal_image_handle.is_none() {
+            let array_texture_path = &tiles_config.normal_texture_path;
+
+            let tex_image = asset_server.load(AssetPath::from_path(array_texture_path));
+            tile_texture_resource.normal_image_handle = Some(tex_image);
+        }
+
+      
+}
+
+
+
+
+
+
+pub fn finalize_tiles_diffuse_texture_from_image(
      config_resource: ResMut<ClayTilesConfigResource>,
     mut tile_texture_resource: ResMut<ClayTilesTexturingResource>,
  //   mut tile_root_query: Query<(&mut ClayTilesRoot, &ClayTilesConfig)>,
@@ -96,12 +170,7 @@ pub fn load_tiles_diffuse_texture_from_image(
     let tiles_config = config_resource.get_config();
     
     //for (mut tiles_data, tiles_config) in tile_root_query.iter_mut() {
-        if tile_texture_resource.diffuse_image_handle.is_none() {
-            let array_texture_path = &tiles_config.diffuse_folder_path;
-
-            let tex_image = asset_server.load(AssetPath::from_path(array_texture_path));
-            tile_texture_resource.diffuse_image_handle = Some(tex_image);
-        }
+       
 
         //try to load the height map data from the height_map_image_handle
         if !tile_texture_resource.diffuse_image_finalized {
@@ -150,7 +219,7 @@ pub fn load_tiles_diffuse_texture_from_image(
 }
 
 
-pub fn load_tiles_normal_texture_from_image(
+pub fn finalize_tiles_normal_texture_from_image(
      config_resource: ResMut<ClayTilesConfigResource>,
     mut tile_texture_resource: ResMut<ClayTilesTexturingResource>,
  //   mut tile_root_query: Query<(&mut ClayTilesRoot, &ClayTilesConfig)>,
@@ -162,12 +231,7 @@ pub fn load_tiles_normal_texture_from_image(
     let tiles_config = config_resource.get_config();
     
     //for (mut tiles_data, tiles_config) in tile_root_query.iter_mut() {
-        if tile_texture_resource.normal_image_handle.is_none() {
-            let array_texture_path = &tiles_config.diffuse_folder_path;
-
-            let tex_image = asset_server.load(AssetPath::from_path(array_texture_path));
-            tile_texture_resource.normal_image_handle = Some(tex_image);
-        }
+        
 
         //try to load the height map data from the height_map_image_handle
         if !tile_texture_resource.normal_image_finalized {

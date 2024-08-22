@@ -1,18 +1,18 @@
 
 use crate::tile_types_config::TileTypesConfig;
-use crate::tiles::ClayTilesTypesConfigResource;
+use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use crate::tile_gizmos::tile_gizmos_plugin;
 use transform_gizmo_bevy::TransformGizmoPlugin;
-use crate::tiles::ClayTilesConfigResource;
+use crate::tiles_texturing::ClayTilesConfigResource;
 
 use bevy::asset::{AssetPath, LoadState};
 use crate::tiles_config::ClayTilesConfig;
-use crate::tiles::ClayTilesTexturingResource;
+use crate::tiles_texturing::ClayTilesTexturingResource;
 use bevy_mod_raycast::prelude::CursorRayPlugin;
 use crate::tile_edit::tile_edit_plugin;
 
 use crate::clay_tile_block::clay_tile_block_plugin;
-use crate::tiles::{load_tiles_diffuse_texture_from_image, load_tiles_normal_texture_from_image};
+ 
 use crate::tile_material::TileMaterialExtension;
 use crate::tile_material::TILE_SHADER_HANDLE;
 //use crate::tile_edit::tile_edit_plugin; 
@@ -20,7 +20,7 @@ use bevy::{asset::load_internal_asset, prelude::*};
  
 
  
- pub mod tiles;
+ pub mod tiles_texturing;
  
  pub mod clay_tile_block; 
  pub mod tile_material;
@@ -70,12 +70,10 @@ impl Plugin for BevyClayTilesPlugin {
         .add_plugins(clay_tile_block_plugin)        
         .add_plugins(tile_edit_plugin)
         .add_plugins(tile_gizmos_plugin)
+        .add_plugins(tiles_texturing::tiles_texturing_plugin)
 
 
-        .add_systems(Update,  (
-            load_tiles_diffuse_texture_from_image,
-            load_tiles_normal_texture_from_image  
-          ).chain())
+        
 
 
         ; 

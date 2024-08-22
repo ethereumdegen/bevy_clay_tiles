@@ -3,7 +3,7 @@
 use crate::tile_types_config::TileTypeConfig;
 use crate::tile_gizmos::ClayTileBlockSelectable;
 use crate::tile_types_config;
-use crate::tiles::ClayTilesTypesConfigResource;
+use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use bevy::render::render_resource::Origin3d;
 use serde::Serialize;
 use serde::Deserialize;
@@ -282,9 +282,10 @@ fn init_build_clay_tile_block (
     mut commands: Commands,
     tile_block_query: Query< Entity ,( With<ClayTileBlock>,  Without<ClayTileMesh> ) >,
 ) {
+    info!("init_build_clay_tile_block");
     for  entity   in tile_block_query.iter() {
         if let Some(mut cmd) = commands.get_entity(entity){ 
-
+            info!("insert rebuild tile block ");
             cmd.insert(RebuildTileBlock); 
         }
     }
@@ -405,7 +406,12 @@ impl ClayTileBlock {
         *mesh_bevel_factor as f64
 
         ) ?;
-       let mesh = pre_mesh.build();
+       let mut mesh = pre_mesh
+       .build() 
+       ;
+
+       let generated_tangents =mesh.generate_tangents()
+       .expect("Failed to generate tangents");
 
         Some(mesh)
 
@@ -470,6 +476,11 @@ pub fn build_tile_block_meshes(
         }
 
 
+        if tile_texture_resource.textures_are_ready() == false {
+             warn!("Tile textures not finalized ");
+            continue;
+        };
+
 
 		commands.entity(block_entity).remove::<RebuildTileBlock>();
 
@@ -491,8 +502,8 @@ pub fn build_tile_block_meshes(
         let tile_config_default = &TileTypeConfig::default();
         
         let tile_type_config = tile_types_config.tile_type_data.get( &tile_type_id ) 
-        .unwrap_or( tile_config_default )
-        ;
+        .unwrap_or( tile_config_default ) ;
+       
             // get uv exp factor from tile_types_config 
 
         let color_texture_expansion_factor = &tile_type_config.diffuse_uv_expansion_factor;
