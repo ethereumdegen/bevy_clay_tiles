@@ -36,6 +36,9 @@ This is similar to a 'chunk'
 
 pub(crate) fn clay_tile_block_plugin(app: &mut App) {
     app
+
+
+        .register_type::<ClayTileBlock>()
     	.add_systems(Update, 
 
     		(
@@ -426,12 +429,12 @@ impl ClayTileBlock {
 }
 
 
-#[derive(Component)]
+#[derive(Component,Default)]
 pub struct ClayTileMesh;
 
 
 //if this exists, destroy it and rebuild the children w the data 
-#[derive(Component)]
+#[derive(Component,Default)]
 pub struct RebuildTileBlock  ;
 
 

@@ -345,9 +345,11 @@ pub fn extrude_2d_polygon_to_3d(
 
             for (i, &index) in triangle.iter().enumerate() {
                 let vertex = bottom_side_buffers.vertices[index as usize];
-                bottom_triangle[i] = [vertex.x, 0.0, vertex.y];  // Correct as is
+
+                let j = 2 - i; //flip normals 
+                bottom_triangle[j] = [vertex.x, 0.0, vertex.y];  // Correct as is
                // top_triangle[i] = [vertex.x, height as f32, vertex.y];  // Correct as is
-                uvs[i] = [vertex.x, vertex.y]; // Basic UV mapping; adjust as necessary
+                uvs[j] = [vertex.x, vertex.y]; // Basic UV mapping; adjust as necessary
             }
 
              // info!("add top tri {:?}",top_triangle);
