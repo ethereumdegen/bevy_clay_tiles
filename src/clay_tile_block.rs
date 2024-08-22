@@ -282,7 +282,7 @@ fn init_build_clay_tile_block (
     mut commands: Commands,
     tile_block_query: Query< Entity ,( With<ClayTileBlock>,  Without<ClayTileMesh> ) >,
 ) {
-    info!("init_build_clay_tile_block");
+   
     for  entity   in tile_block_query.iter() {
         if let Some(mut cmd) = commands.get_entity(entity){ 
             info!("insert rebuild tile block ");
