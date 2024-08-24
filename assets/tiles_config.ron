@@ -2,7 +2,7 @@
 ClayTilesConfig(
     
     
-    texture_image_sections: 4,
+   // texture_image_sections: 4,
      
      
      //diffuse_texture_path: "textures/tiles_array_texture.tga", 

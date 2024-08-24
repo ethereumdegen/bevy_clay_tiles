@@ -514,8 +514,8 @@ pub fn build_tile_block_meshes(
        
             // get uv exp factor from tile_types_config 
 
-        let color_texture_expansion_factor = &tile_type_config.diffuse_uv_expansion_factor;
-        let diffuse_color_tint = &tile_type_config.diffuse_color_tint.unwrap_or(LinearRgba::rgb(1.0, 1.0, 1.0));
+       // let color_texture_expansion_factor = &tile_type_config.diffuse_uv_expansion_factor;
+       // let diffuse_color_tint = &tile_type_config.diffuse_color_tint.unwrap_or(LinearRgba::rgb(1.0, 1.0, 1.0));
         let tile_material_name = &tile_type_config.material_name;
 
 	    /*let tile_material: Handle<TileMaterialExtension> =

@@ -79,8 +79,8 @@ pub struct TileTypeConfig {
    pub name: String,
  //  pub diffuse_texture_index: u32,
    pub material_name: String , 
-   pub diffuse_uv_expansion_factor: f32, 
-   pub diffuse_color_tint: Option<LinearRgba>, 
+  // pub diffuse_uv_expansion_factor: f32, 
+ //  pub diffuse_color_tint: Option<LinearRgba>, 
 
     
    
