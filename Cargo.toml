@@ -3,7 +3,7 @@ name = "bevy_clay_tiles"
 description = "A procedural-mesh building system for bevy"
  
  
-version = "0.14.11"
+version = "0.14.12"
  
  
 edition = "2021"
