@@ -24,6 +24,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(BevyMaterialToolPlugin{
+            material_types_config_path: "assets/material_overrides/material_types.ron".to_string(),
             material_overrides_gltf_path:  "material_overrides/doodad_material_overrides.glb".to_string(),
         })
         .add_plugins(BevyClayTilesPlugin {
