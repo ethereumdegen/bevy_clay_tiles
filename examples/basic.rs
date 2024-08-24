@@ -18,6 +18,7 @@ use bevy::prelude::*;
 
  use bevy_clay_tiles::BevyClayTilesPlugin;
  
+ use bevy_material_tool::material_overrides::MaterialOverridesLoadingState; 
 
 fn main() {
     App::new()
@@ -31,6 +32,8 @@ fn main() {
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
         .add_systems(Startup, bevy_material_tool::material_overrides::begin_loading_materials )
+
+        .add_systems(OnEnter(  MaterialOverridesLoadingState::Complete ), load_sample_block)
         .add_systems(Update, rotate_camera  )
 
          .add_systems(Update, update_directional_light_position)
@@ -77,7 +80,32 @@ fn setup(
  
       //typically you wont define meshes by points manually , this is just an example ..
 
-        let polygon_points = vec![
+      
+
+ 
+        /*
+        In your editor, your tooling/controls will modify the tile_edit_resource. 
+        this will allow you to edit tiles in real time
+
+        When you are ready to save/load your tiles, just write the 'ClayTileBlock' component with serde to hard-disk and deserialize it back to load.
+        
+        */
+          tile_edit_resource.set_selected_tool(
+           Some( TileEditingTool::BuildTile( BuildTileTool::RectangleTileBuild ))
+        //  Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyTileHeight ))
+            );
+
+      
+
+}
+
+ 
+
+fn load_sample_block(
+    mut commands:Commands,
+    ){
+
+      let polygon_points = vec![
             IVec2::new(0, 0),  
             IVec2::new(2, 0), 
             IVec2::new(2, 2),  
@@ -100,24 +128,8 @@ fn setup(
 
         
 
- 
-        /*
-        In your editor, your tooling/controls will modify the tile_edit_resource. 
-        this will allow you to edit tiles in real time
-
-        When you are ready to save/load your tiles, just write the 'ClayTileBlock' component with serde to hard-disk and deserialize it back to load.
-        
-        */
-          tile_edit_resource.set_selected_tool(
-           Some( TileEditingTool::BuildTile( BuildTileTool::RectangleTileBuild ))
-        //  Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyTileHeight ))
-            );
-
-      
 
 }
-
- 
 
 fn rotate_camera(mut query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
     let mut transform = query.single_mut();

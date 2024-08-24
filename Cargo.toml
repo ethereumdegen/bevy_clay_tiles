@@ -3,7 +3,7 @@ name = "bevy_clay_tiles"
 description = "A procedural-mesh building system for bevy"
  
  
-version = "0.14.8"
+version = "0.14.9"
  
  
 edition = "2021"
@@ -28,7 +28,7 @@ serde = { version = "1.0", features = ["derive"] }
 bevy_mod_raycast = "0.18.0"
 thiserror = "1.0.48"
  
- bevy_material_tool = {path = "../bevy_material_tool"}
+ bevy_material_tool = "0.14.1"
   
 serde_json = "1.0.113"
  
