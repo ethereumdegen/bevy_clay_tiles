@@ -1,13 +1,15 @@
 
 
+use crate::ClayTilesTypesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
 use crate::tile_gizmos::ClayTileBlockSelectable;
 use crate::tile_types_config;
-use crate::tiles_texturing::ClayTilesTypesConfigResource;
+//use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use bevy::render::render_resource::Origin3d;
+use bevy_material_tool::material_overrides::MaterialOverrideComponent;
 use serde::Serialize;
 use serde::Deserialize;
-use crate::ClayTilesTexturingResource;
+//use crate::ClayTilesTexturingResource;
 use crate::pre_mesh::PreMesh;
 use crate::tile_edit::TileEditingResource;
  
@@ -464,7 +466,9 @@ pub fn build_tile_block_meshes(
 	>, 
 
 	 mut meshes: ResMut<Assets<Mesh>>,
-    tile_texture_resource: Res <ClayTilesTexturingResource>,
+
+      mut materials: ResMut<Assets<StandardMaterial>>,
+    //tile_texture_resource: Res <ClayTilesTexturingResource>,
   
     mut tile_materials: ResMut<Assets<TileMaterialExtension>>,
 
@@ -483,11 +487,7 @@ pub fn build_tile_block_meshes(
             continue;
         }
 
-
-        if tile_texture_resource.textures_are_ready() == false {
-             warn!("Tile textures not finalized ");
-            continue;
-        };
+ 
 
 
 		commands.entity(block_entity).remove::<RebuildTileBlock>();
@@ -499,26 +499,26 @@ pub fn build_tile_block_meshes(
         };*/
 
 		//let tile_diffuse_texture = clay_tiles_root.terrain_data_loaded
-		let tile_diffuse_texture = tile_texture_resource.get_diffuse_texture_image().clone();
-        let tile_normal_texture = tile_texture_resource.get_normal_texture_image().clone();
+	//	let tile_diffuse_texture = tile_texture_resource.get_diffuse_texture_image().clone();
+     //   let tile_normal_texture = tile_texture_resource.get_normal_texture_image().clone();
         
         info!("building clay tile mesh");
 
         let tile_type_id = clay_tile_block.tile_type_index;
 
 
-        let tile_config_default = &TileTypeConfig::default();
+        
         
         let tile_type_config = tile_types_config.tile_type_data.get( &tile_type_id ) 
-        .unwrap_or( tile_config_default ) ;
+        .expect("unable to load tile types config");
        
             // get uv exp factor from tile_types_config 
 
         let color_texture_expansion_factor = &tile_type_config.diffuse_uv_expansion_factor;
         let diffuse_color_tint = &tile_type_config.diffuse_color_tint.unwrap_or(LinearRgba::rgb(1.0, 1.0, 1.0));
-        let tile_diffuse_texture_index = &tile_type_config.diffuse_texture_index;
+        let tile_material_name = &tile_type_config.material_name;
 
-	    let tile_material: Handle<TileMaterialExtension> =
+	    /*let tile_material: Handle<TileMaterialExtension> =
                 tile_materials.add(ExtendedMaterial {
                     base: StandardMaterial {
                         // can be used in forward or deferred mode.
@@ -556,7 +556,7 @@ pub fn build_tile_block_meshes(
                        
                         ..default()
                     },
-                });
+                });*/
 
 
             if let Some(origin_point) =  clay_tile_block.get_origin_point() {
@@ -598,17 +598,22 @@ pub fn build_tile_block_meshes(
            // chunk_data.material_handle = Some(chunk_terrain_material);
 
             commands.entity(block_entity)
-             .add_child(mesh_bundle);
+             .add_child(mesh_bundle);   
 
     */
+
+
+        let simple_material =  materials.add( StandardMaterial::from_color( Color::BLACK ) );
 
              commands.entity(block_entity)
              .insert(  (
                 terrain_mesh_handle,
-                 tile_material.clone(),
+                    
                     ClayTileMesh,
                     ClayTileBlockSelectable,
-                    Name::new("ClayTileBlock")
+                    Name::new("ClayTileBlock"),
+                    simple_material,
+                    MaterialOverrideComponent{material_override: tile_material_name.to_string()}
 
                 )  )
 

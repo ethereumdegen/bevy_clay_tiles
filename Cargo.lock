@@ -528,6 +528,7 @@ version = "0.14.8"
 dependencies = [
  "anyhow",
  "bevy 0.14.0",
+ "bevy_material_tool",
  "bevy_mod_raycast",
  "bevy_mod_sysfail",
  "futures-lite 1.13.0",
@@ -1000,6 +1001,13 @@ dependencies = [
  "quote",
  "syn 2.0.61",
  "toml_edit 0.22.12",
+]
+
+[[package]]
+name = "bevy_material_tool"
+version = "0.14.1"
+dependencies = [
+ "bevy 0.14.0",
 ]
 
 [[package]]

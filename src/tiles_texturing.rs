@@ -34,46 +34,7 @@ pub(crate) fn tiles_texturing_plugin(app: &mut App) {
     ;
 }
 
-#[derive(Resource, Default)]
-pub struct ClayTilesConfigResource  (pub ClayTilesConfig) ;
 
-impl ClayTilesConfigResource {
-
-    pub fn get_config(&self) -> &ClayTilesConfig {
-        &self.0
-    }
-}
-
-
-
-
-#[derive(Resource, Default)]
-pub struct ClayTilesTypesConfigResource {
-    
-    
-  pub tile_type_data: HashMap<usize, TileTypeConfig>
-}
-
-impl ClayTilesTypesConfigResource {
-
-    pub fn new( types_config: &TileTypesConfig ) -> Self {
-
-        let mut tile_type_data = HashMap::new();
-
-        for (i, element) in types_config.tile_types.iter().enumerate() {
-
-            tile_type_data.insert( i , element.clone() );
-
-        }
-
-        Self {
-            tile_type_data
-
-        }
-
-
-    }
-}
 
 
 #[derive(Resource, Default)]

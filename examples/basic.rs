@@ -2,6 +2,7 @@
  
   
 use bevy_clay_tiles::tile_edit::ModifyTileTool;
+use bevy_material_tool::BevyMaterialToolPlugin;
 use transform_gizmo_bevy::GizmoCamera;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlockBuilder;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlock;
@@ -21,11 +22,15 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(BevyMaterialToolPlugin{
+            material_overrides_gltf_path:  "material_overrides/doodad_material_overrides.glb".to_string(),
+        })
         .add_plugins(BevyClayTilesPlugin {
             config: ClayTilesConfig::load_from_file("assets/tiles_config.ron").unwrap()
         })
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
+        .add_systems(Startup, bevy_material_tool::material_overrides::begin_loading_materials )
         .add_systems(Update, rotate_camera  )
 
          .add_systems(Update, update_directional_light_position)
