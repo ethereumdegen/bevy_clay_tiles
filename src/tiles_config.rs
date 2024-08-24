@@ -18,7 +18,7 @@ use std::path::PathBuf;
 pub struct ClayTilesConfig {
     
    
-    pub texture_image_sections: u32,
+  //  pub texture_image_sections: u32,
  //   pub diffuse_texture_path: PathBuf,
  //   pub normal_texture_path: PathBuf,
     pub tile_types_config_path: PathBuf,
@@ -29,7 +29,7 @@ impl Default for ClayTilesConfig {
         Self {
            
             
-            texture_image_sections: 4, 
+         //   texture_image_sections: 4, 
           //  diffuse_texture_path: "diffuse/".into(),
          //   normal_texture_path: "normal/".into(),
             tile_types_config_path: "tile_types.ron".into()

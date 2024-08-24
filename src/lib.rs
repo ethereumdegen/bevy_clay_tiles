@@ -1,4 +1,4 @@
-
+pub use bevy_material_tool;  //re export!
  
 use crate::tile_types_config::ClayTilesTypesConfigResource;
 use crate::tile_types_config::ClayTilesConfigResource;

@@ -579,7 +579,7 @@ pub fn build_tile_block_meshes(
 
 
              
-            let terrain_mesh_handle = meshes.add(mesh);
+            let  mesh_handle = meshes.add(mesh);
 
            /* let mesh_bundle = commands
                 .spawn(TilePbrBundle {
@@ -607,7 +607,7 @@ pub fn build_tile_block_meshes(
 
              commands.entity(block_entity)
              .insert(  (
-                terrain_mesh_handle,
+                mesh_handle,
                     
                     ClayTileMesh,
                     ClayTileBlockSelectable,
