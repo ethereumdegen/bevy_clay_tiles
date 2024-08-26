@@ -1,5 +1,9 @@
 
 
+use crate::modify_tiles::ClayTileBlockPointsTranslation;
+
+
+use bevy::utils::HashMap;
 use crate::modify_tiles::ClayTileBlockSelectable;
 use crate::ClayTilesTypesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
@@ -170,7 +174,8 @@ impl ClayTileBlockBuilder {
     }
 
 
-     pub fn build(&self) -> Option<ClayTileBlock> {
+     pub fn build(&self,
+        ) -> Option<ClayTileBlock> {
 
         if !self.is_complete(){
 
@@ -388,7 +393,11 @@ impl ClayTileBlock {
     }
 
 
-    pub fn build_mesh(&self) -> Option<Mesh> {
+    pub fn build_mesh(&self, 
+
+        additional_points_translation: Option< &HashMap<usize,IVec2> >
+
+        ) -> Option<Mesh> {
 
 
        let  polygon = self.to_exterior_polygon();
@@ -409,11 +418,14 @@ impl ClayTileBlock {
         &polygon .into() , 
         origin_offset,
         *mesh_height_scale as f64,
-        *mesh_bevel_factor as f64
+        *mesh_bevel_factor as f64,
+         additional_points_translation 
 
         ) ?;
        let mut mesh = pre_mesh
-       .build() 
+       .build(
+        
+        ) 
        ;
 
        /*let generated_tangents = mesh.generate_tangents()  ;
@@ -463,7 +475,7 @@ fn add_needs_rebuild_to_block_mesh(
 pub fn build_tile_block_meshes(
 	mut commands:Commands,
 	mut clay_tile_layer_query: Query<
-	 (Entity, & ClayTileBlock,  Option<&Parent>, &mut Transform ), With<RebuildTileBlock>
+	 (Entity, & ClayTileBlock,  Option<&Parent>, &mut Transform, Option<&ClayTileBlockPointsTranslation> ), With<RebuildTileBlock>
 	>, 
 
 	 mut meshes: ResMut<Assets<Mesh>>,
@@ -479,7 +491,7 @@ pub fn build_tile_block_meshes(
 	){
 
 
-	for (block_entity, clay_tile_block, parent_option, mut tile_block_transform ) in clay_tile_layer_query.iter_mut(){
+	for (block_entity, clay_tile_block, parent_option, mut tile_block_transform, additional_points_translation_comp ) in clay_tile_layer_query.iter_mut(){
 
         if !clay_tile_block.is_complete() {
             // not complete so we skip 
@@ -567,7 +579,11 @@ pub fn build_tile_block_meshes(
            
              tile_block_transform.translation.y = clay_tile_block.height_level as f32;
 
-             let mesh = clay_tile_block.build_mesh();
+
+
+             let additional_points_translation = additional_points_translation_comp.as_ref().map(|comp| &comp.point_translations  );
+
+             let mesh = clay_tile_block.build_mesh( additional_points_translation );
 
 
               let Some( mesh ) = mesh else {

@@ -1,5 +1,6 @@
 
  use geo::Coord;
+ use bevy::utils::HashMap;
 use geo::algorithm::centroid::Centroid;
  
 use lyon::math::{Box2D, Point, point};
@@ -134,7 +135,8 @@ pub fn extrude_2d_polygon_to_3d(
     polygon: &MultiPolygon , 
     origin_offset: IVec2,
     height: f64,
-    bevel_factor: f64
+    bevel_factor: f64,
+     additional_points_translation: Option< &HashMap<usize,IVec2> >
     ) -> Option<Self> {
     
 
@@ -147,7 +149,7 @@ pub fn extrude_2d_polygon_to_3d(
     // Iterate over the exterior of the polygon
   //  let exterior_coords = polygon.exterior_coords_iter() ;
 
-    let exterior_coords: Vec<Coord<f64>> = polygon
+    let mut exterior_coords: Vec<Coord<f64>> = polygon
         .exterior_coords_iter()
         .map(|coord|  
               Coord {
@@ -157,6 +159,21 @@ pub fn extrude_2d_polygon_to_3d(
 
         )
         .collect();
+
+
+
+
+
+     //modify by additional translate
+
+        if let Some(translations) = additional_points_translation {
+            for (point_index, translation) in translations.iter() {
+                if let Some(coord) = exterior_coords.get_mut(*point_index) {
+                    coord.x += translation.x as f64;
+                    coord.y += translation.y as f64;
+                }
+            }
+        }
  
 
     let mut bottom_vertices = Vec::new();
@@ -169,6 +186,13 @@ pub fn extrude_2d_polygon_to_3d(
         // Top vertices (y = height)
         top_vertices.push( [coord.x as f32, height as f32, coord.y as f32]);
     }
+
+
+
+
+   
+
+
 
 
      // Compute the centroid of the top vertices and scale them in 

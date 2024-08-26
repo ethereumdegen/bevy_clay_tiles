@@ -2,7 +2,7 @@
 
 use crate::{clay_tile_block::RebuildTileBlock, tile_edit::TileEditingResource};
 
-use bevy::utils::HashSet;
+use bevy::utils::{HashSet,HashMap};
 use crate::clay_tile_block::ClayTileBlock;
 use bevy::reflect::List;
 use bevy_mod_raycast::prelude::*;
@@ -62,6 +62,12 @@ pub struct ModifyTileResource {
     pub modify_origin_point: Option<Vec3>,
 
 
+}
+
+#[derive(Clone,Debug,Component)]
+pub struct ClayTileBlockPointsTranslation {
+
+  pub point_translations: HashMap<usize, IVec2>
 }
 
 #[derive(Clone,Debug)]
@@ -195,6 +201,7 @@ fn raycast_to_select_tiles(
 
                 let face_type = TileBlockFaceType::estimate_from_normal(intersection_normal);
 
+                info!("face type {:?}" , face_type);
             	if face_type == TileBlockFaceType::Side {
 
 
@@ -349,14 +356,34 @@ fn update_modify_points(
 
         let drag_delta = modify_current_drag_endpoint - *modify_current_drag_startpoint ;
 
+        let drag_delta_ivec:IVec2 = IVec2::new( drag_delta.x as i32,  drag_delta.z as i32  );
         info!("drag_delta , {:?}", drag_delta);
 
+
+        let Some( modifying_point_indices ) =  &modify_tile_resource.modifying_point_indices else {return};
+
+        let mut point_translations = HashMap::new();
+
+        for i in modifying_point_indices.iter(){
+
+             point_translations.insert( *i , drag_delta_ivec.clone() );
+
+        }
+       
 
 
         if let Some(mut cmd) = commands.get_entity(*clay_tile_entity ){
             info!("modifying tile..");
 
-            cmd.insert( RebuildTileBlock );
+            cmd
+            .insert(  ClayTileBlockPointsTranslation {
+
+                point_translations  
+
+
+            }  )
+            .insert( RebuildTileBlock )
+            ;
         }
 
     }
