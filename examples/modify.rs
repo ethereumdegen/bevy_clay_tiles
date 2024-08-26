@@ -92,8 +92,8 @@ fn setup(
         
         */
           tile_edit_resource.set_selected_tool(
-           Some( TileEditingTool::BuildTile( BuildTileTool::RectangleTileBuild ))
-           // Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyDragSides ))
+         //  Some( TileEditingTool::BuildTile( BuildTileTool::RectangleTileBuild ))
+            Some( TileEditingTool::ModifyTile ( ModifyTileTool::ModifyDragSides ))
             );
 
       
@@ -106,7 +106,7 @@ fn load_sample_block(
     mut commands:Commands,
     ){
 
-      let polygon_points = vec![
+        let polygon_points = vec![
             IVec2::new(0, 0),  
             IVec2::new(2, 0), 
             IVec2::new(2, 2),  
@@ -121,6 +121,8 @@ fn load_sample_block(
         .insert(ClayTileBlockBuilder {
 
             polygon_points,
+
+            mesh_height: 2.0,
 
             ..default()
         } )

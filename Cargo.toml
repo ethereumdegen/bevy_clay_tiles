@@ -45,3 +45,7 @@ transform-gizmo-bevy = "0.3.0"
 name = "basic"
 path = "examples/basic.rs"
 
+[[example]]
+name = "modify"
+path = "examples/modify.rs"
+
