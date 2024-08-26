@@ -68,10 +68,16 @@ fn add_material_handles(
         let material_name = &tile_material_comp.material_name;  
 
         commands.get_entity(tile_entity).map( |mut cmd| { 
-          cmd.insert( MaterialOverrideComponent {
-            material_override:  material_name.clone()
-           }  );
-         } );
+
+
+            cmd.remove::<ClayTileMaterial>( ); 
+
+            cmd.insert( MaterialOverrideComponent {
+                material_override:  material_name.clone()
+            }  ); 
+
+
+        } );
 
     }
 
