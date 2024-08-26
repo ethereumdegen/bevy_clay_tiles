@@ -2,6 +2,7 @@
 
 use crate::tile_edit::TileEditingResource;
 use crate::clay_tile_block::ClayTileBlock;
+use bevy::reflect::List;
 use bevy_mod_raycast::prelude::*;
 use bevy::prelude::*;
 
@@ -13,6 +14,10 @@ use bevy::prelude::*;
     For ModifyDragSides...
        When mouse down, use the normal to see if you are clicking the TOP or SIDE, .  THEN  figure out X and Z coords to figure out which bottom  segment you are grabbing . 
 
+
+	when mouse moves, just take the two points of the segment that is 'selected' and translate those points 
+
+- if a point is selected, translate that point only  ! 
 
 
 */
@@ -28,7 +33,7 @@ pub(crate) fn modify_tiles_plugin(app: &mut App) {
 
              
                 //add_selectable_to_clay_tile_children, 
-               // add_gizmo_component_to_selected_tile,
+                // add_gizmo_component_to_selected_tile,
 
             
                 ).chain() 
@@ -46,6 +51,14 @@ pub struct ModifyTileResource {
     pub modifying_tile: Option<Entity>,
     pub modifying_side: Option<TileBlockFaceType>,
     pub modifying_segment_index: Option<usize>
+
+}
+
+#[derive(Clone,Debug)]
+pub struct LineSegment {
+
+	pub start_point: IVec2,
+	pub end_point: IVec2,
 
 }
 
@@ -98,6 +111,7 @@ fn add_selectable_to_clay_tile_children(
 
 }*/
 
+
  
 fn raycast_to_select_tiles(
 
@@ -107,9 +121,11 @@ fn raycast_to_select_tiles(
     raycast_filter_query: Query<Entity, With<ClayTileBlockSelectable>>,  //make sure meshes have this ?
     mouse_input: Res<ButtonInput<MouseButton>>,
 
-     tile_edit_resource: Res<TileEditingResource>,
+    clay_tile_block_query: Query<&ClayTileBlock>,
 
-       mut modify_tile_resource: ResMut<ModifyTileResource>,
+    tile_edit_resource: Res<TileEditingResource>,
+
+    mut modify_tile_resource: ResMut<ModifyTileResource>,
     ){
 
 
@@ -129,6 +145,72 @@ fn raycast_to_select_tiles(
             info!("selecting tile {:?}",  intersection_data);
 
             modify_tile_resource.modifying_tile = Some(*first_hit_entity);
+
+
+            if let Some( clay_tile_block ) = clay_tile_block_query.get( *first_hit_entity).ok() {
+
+            	let mut base_segments: Vec< LineSegment > = Vec::new();
+            	let tile_block_polygon_points = &clay_tile_block.polygon_points;
+
+            	let clay_tile_height_level = &clay_tile_block.height_level; 
+
+
+            	let intersection_position = intersection_data.position();
+            	let intersection_normal = intersection_data.normal(); 
+
+            	for point_index in 0..tile_block_polygon_points.len() {
+
+            		let start_point = tile_block_polygon_points[(point_index + 0) % tile_block_polygon_points.len()] ;
+            		let end_point = tile_block_polygon_points[(point_index + 1) % tile_block_polygon_points.len()] ;
+
+            		base_segments.push(  
+            			LineSegment{
+            				start_point,
+            				end_point
+
+            			}
+            		 );
+            	}	
+
+
+            	   // Find the segment with the minimum distance to the intersection position
+                let mut closest_segment = None;
+                let mut min_distance = f32::MAX;
+
+                for (index, segment) in base_segments.iter().enumerate() {
+                    let start = IVec3::new( segment.start_point.x, *clay_tile_height_level as i32, segment.start_point.y);
+                    let end = IVec3::new( segment.end_point.x, *clay_tile_height_level as i32, segment.end_point.y);
+
+                    // Project intersection_position onto the line segment
+                    let segment_vector = end - start;
+                    let to_intersection = intersection_position - start;
+                    let projection_length = to_intersection.dot(segment_vector) / segment_vector.length_squared();
+                    let projection = start + projection_length.clamp(0.0, 1.0) * segment_vector;
+
+                    // Calculate the distance from the intersection position to the projection
+                    let distance = (intersection_position - projection).length();
+
+                    if distance < min_distance {
+                        min_distance = distance;
+                        closest_segment = Some(index);
+                    }
+                }
+
+                if let Some(best_segment_index) = closest_segment {
+                    info!("Best segment index: {}", best_segment_index);
+
+                    // You can now do something with the best segment index
+                    // For example, you can store it in modify_tile_resource or use it in another function
+                }
+
+
+
+
+
+
+
+
+            }
 
 
             // if intesect w Side,   use X and Z to pick the BEST segment index as possible ... 

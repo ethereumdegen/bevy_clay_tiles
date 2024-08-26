@@ -1,8 +1,9 @@
 
 
+use crate::modify_tiles::ClayTileBlockSelectable;
 use crate::ClayTilesTypesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
-use crate::tile_gizmos::ClayTileBlockSelectable;
+//use crate::tile_gizmos::ClayTileBlockSelectable;
 use crate::tile_types_config;
 //use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use bevy::render::render_resource::Origin3d;
