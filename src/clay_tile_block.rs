@@ -1,5 +1,7 @@
 
 
+use crate::modify_tiles::ModifyingClayTile;
+use crate::modify_tiles::ClayTileBlockMeshHeightTranslation;
 use crate::modify_tiles::ClayTileBlockPointsTranslation;
 
 
@@ -129,9 +131,9 @@ impl ClayTileBlockBuilder {
 
     }
 
+    pub fn get_polygon_area(&self) -> f32 {
 
-    pub fn points_are_counterclockwise(&self) -> bool {
-        let points = &self.polygon_points;
+         let points = &self.polygon_points;
         let len = points.len();
         let mut sum = 0.0;
 
@@ -139,25 +141,42 @@ impl ClayTileBlockBuilder {
             let p1_signed = points[i];
             let p2_signed = points[i + 1];
 
-            // Convert UVec2 to IVec2 to safely perform arithmetic operations
-           // let p1_signed = IVec2::new(p1.x , p1.y );
-        //  let p2_signed = IVec2::new(p2.x  , p2.y  );
- 
+           
             sum += (p2_signed.x - p1_signed.x) as f32 * (p2_signed.y + p1_signed.y) as f32;
         }
 
-        sum > 0.0
+        sum
+
+    }
+
+    pub fn points_are_counterclockwise(&self) -> bool {
+        let area = self.get_polygon_area();
+
+        area > 0.0
     }
 
     // Function to ensure points are in counterclockwise order
-    pub fn ensure_counterclockwise(&mut self) {
+    pub fn ensure_counterclockwise(&mut self) -> bool {
         if !self.points_are_counterclockwise() {
             self.polygon_points.reverse();
+            true
+        }else {
+            false
         }
     }
 
 
     pub fn is_complete(&self) -> bool {
+
+
+        if self.get_polygon_area().abs() < 0.01 {
+
+            return false; 
+        }
+
+        if self.mesh_height < 0.9 { //mesh height must be >= 1 !
+            return false; 
+        }
 
 
         if self.polygon_points.len() < 3 {
@@ -367,8 +386,58 @@ impl ClayTileBlock {
     }
 
 
+     pub fn get_polygon_area(&self) -> f32 {
+
+         let points = &self.polygon_points;
+        let len = points.len();
+        let mut sum = 0.0;
+
+        for i in 0..len - 1 {
+            let p1_signed = points[i];
+            let p2_signed = points[i + 1];
+
+           
+            sum += (p2_signed.x - p1_signed.x) as f32 * (p2_signed.y + p1_signed.y) as f32;
+        }
+
+        sum
+
+    }
+
+      pub fn points_are_counterclockwise(&self) -> bool {
+        let area = self.get_polygon_area();
+
+        area > 0.0
+    }
+
+    // Function to ensure points are in counterclockwise order
+   pub fn ensure_counterclockwise(&mut self) -> bool {
+        if !self.points_are_counterclockwise() {
+            self.polygon_points.reverse();
+            true
+        }else {
+            false
+        }
+    }
+
+
+
+
     pub fn is_complete(&self) -> bool {
 
+        info!("area is {:?}",self.get_polygon_area());
+
+
+        if self.get_polygon_area().abs() < 0.01 {
+              info!("not complete! " );
+
+
+            return false; 
+        }
+
+        if self.mesh_height < 0.9 { //mesh height must be >= 1 !
+            return false; 
+        }
 
 
         if self.polygon_points.len() < 3 {
@@ -393,9 +462,11 @@ impl ClayTileBlock {
     }
 
 
-    pub fn build_mesh(&self, 
+    pub fn build_mesh(
+        &self, 
 
-        additional_points_translation: Option< &HashMap<usize,IVec2> >
+        additional_points_translation: Option< &HashMap<usize,IVec2> >, //for real time responsive modify preview 
+        mesh_height_delta: Option< i32 > //for real time responsive modify preview 
 
         ) -> Option<Mesh> {
 
@@ -413,11 +484,20 @@ impl ClayTileBlock {
             *p * -1
 
          ).unwrap_or( IVec2::new(0,0) ) ;
+
+
+        let mut final_mesh_height = *mesh_height_scale as f64  + mesh_height_delta.unwrap_or(0) as f64;
+
+        if final_mesh_height < 1.0 {
+            final_mesh_height = 1.0;
+        }
+
+
  
        let pre_mesh = PreMesh::extrude_2d_polygon_to_3d(
         &polygon .into() , 
         origin_offset,
-        *mesh_height_scale as f64,
+        final_mesh_height,
         *mesh_bevel_factor as f64,
          additional_points_translation 
 
@@ -475,8 +555,17 @@ fn add_needs_rebuild_to_block_mesh(
 pub fn build_tile_block_meshes(
 	mut commands:Commands,
 	mut clay_tile_layer_query: Query<
-	 (Entity, & ClayTileBlock,  Option<&Parent>, &mut Transform, Option<&ClayTileBlockPointsTranslation> ), With<RebuildTileBlock>
+	 (
+        Entity, 
+        &mut ClayTileBlock,  
+        Option<&Parent>, 
+        &mut Transform, 
+        Option<&ClayTileBlockPointsTranslation>, 
+        Option<&ClayTileBlockMeshHeightTranslation>,
+         ), With<RebuildTileBlock>
 	>, 
+
+    modifying_query: Query<&ModifyingClayTile>,
 
 	 mut meshes: ResMut<Assets<Mesh>>,
 
@@ -491,7 +580,7 @@ pub fn build_tile_block_meshes(
 	){
 
 
-	for (block_entity, clay_tile_block, parent_option, mut tile_block_transform, additional_points_translation_comp ) in clay_tile_layer_query.iter_mut(){
+	for (block_entity, mut clay_tile_block, parent_option, mut tile_block_transform, additional_points_translation_comp , mesh_height_translation_comp) in clay_tile_layer_query.iter_mut(){
 
         if !clay_tile_block.is_complete() {
             // not complete so we skip 
@@ -499,6 +588,8 @@ pub fn build_tile_block_meshes(
               warn!("Tile segments are incomplete");
             continue;
         }
+
+        let use_modify_preview_material = modifying_query.get(block_entity).is_ok();
 
  
 
@@ -582,8 +673,13 @@ pub fn build_tile_block_meshes(
 
 
              let additional_points_translation = additional_points_translation_comp.as_ref().map(|comp| &comp.point_translations  );
+             let mesh_height_delta =   mesh_height_translation_comp.as_ref().map(|c| c.mesh_height_delta ) ;
 
-             let mesh = clay_tile_block.build_mesh( additional_points_translation );
+
+             let flipped = clay_tile_block.ensure_counterclockwise();
+             info!("polygon flipped {}", flipped); 
+
+             let mesh = clay_tile_block.build_mesh( additional_points_translation, mesh_height_delta );
 
 
               let Some( mesh ) = mesh else {
@@ -620,7 +716,21 @@ pub fn build_tile_block_meshes(
     */
 
 
-        let simple_material =  materials.add( StandardMaterial::from_color( Color::BLACK ) );
+            //maybe dont do this every frame ? 
+            let mut preview_material =  StandardMaterial::from_color( Color::srgba(0.4, 0.7, 0.7, 0.7) ) ;
+           
+            preview_material.alpha_mode = AlphaMode::Blend;
+
+             let  preview_material_handle =   materials.add( 
+                 preview_material
+             );
+
+            /*let simple_material =  materials.add( 
+                StandardMaterial::from_color( Color::srgba(0.4, 0.7, 0.7, 0.5) )
+
+
+                 );*/
+
 
              commands.entity(block_entity)
              .insert(  (
@@ -629,12 +739,21 @@ pub fn build_tile_block_meshes(
                     ClayTileMesh,
                     ClayTileBlockSelectable,
                     Name::new("ClayTileBlock"),
-                    simple_material,
-                    MaterialOverrideComponent{material_override: tile_material_name.to_string()}
-
+                    preview_material_handle,
+                   
                 )  )
 
              ;
+
+             if !use_modify_preview_material {
+
+                commands.entity(block_entity)
+             .insert( 
+                MaterialOverrideComponent{material_override: tile_material_name.to_string()}
+              );
+
+
+             }
             
            // chunk_data.chunk_state = ChunkState::FullyBuilt;
 

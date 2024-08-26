@@ -196,6 +196,14 @@ impl TileEditingResource {
 
     }
 
+     pub fn get_selected_tool(& self) -> &Option<EditingTool>{
+
+
+        &self.selected_tool 
+
+    }
+
+
     pub fn set_new_tile_parent_entity(&mut self, parent: Option<Entity>) {
 
 
@@ -242,7 +250,7 @@ impl TileEditingResource {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Eq,PartialEq,Hash)]
 pub enum EditingTool {
     BuildTile( BuildTileTool ),
     ModifyTile (ModifyTileTool)    
@@ -273,7 +281,7 @@ impl EditingTool {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Eq,PartialEq,Hash)]
 pub enum BuildTileTool { 
     RectangleTileBuild , 
     LinearTileBuild, 
@@ -282,9 +290,10 @@ pub enum BuildTileTool {
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Eq,PartialEq,Hash)]
 pub enum ModifyTileTool { 
     ModifyDragSides, 
+    ModifyDragVertices,
 
     ModifyTileHeight , 
     ModifyTileBevel ,   
