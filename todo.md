@@ -13,11 +13,8 @@ https://github.com/urholaukkarinen/transform-gizmo
 
  
 
-- be able to modify dimensions -- push and pull them ! 
-    For ModifyDragSides...
-       When mouse down, use the normal to see if you are clicking the TOP or SIDE, .  THEN  figure out X and Z coords to figure out which bottom  segment you are grabbing . 
-
-
+-add a way to drag edit the top and the bottom ..
+- add a way to drag edit just the points .. 
 
 ### SAVE FILE  
 - just a bunch of separate doodads basically 

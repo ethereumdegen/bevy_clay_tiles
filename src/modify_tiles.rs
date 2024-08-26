@@ -35,6 +35,9 @@ pub(crate) fn modify_tiles_plugin(app: &mut App) {
 
                 update_modify_points, 
 
+
+                handle_apply_modifications,
+
              
                 //add_selectable_to_clay_tile_children, 
                 // add_gizmo_component_to_selected_tile,
@@ -69,6 +72,9 @@ pub struct ClayTileBlockPointsTranslation {
 
   pub point_translations: HashMap<usize, IVec2>
 }
+
+#[derive(Clone,Debug,Component)]
+pub struct ApplyModifications; 
 
 #[derive(Clone,Debug)]
 pub struct LineSegment {
@@ -249,6 +255,9 @@ fn raycast_to_select_tiles(
                     if let Some(best_segment_index) = closest_segment {
                         info!("segment index: {}", best_segment_index);
 
+                        let first_index = 0;
+                        let last_index = tile_block_polygon_points.len()-1 ;
+
                         let start_index = (best_segment_index + 0) % tile_block_polygon_points.len();
                         let end_index = (best_segment_index + 1) % tile_block_polygon_points.len();
                         
@@ -256,6 +265,16 @@ fn raycast_to_select_tiles(
 
                         point_indices.insert(start_index);
                         point_indices.insert(end_index);
+
+
+                        if start_index == first_index {
+                            point_indices.insert(last_index);
+                        }
+
+                        if end_index == last_index {
+                            point_indices.insert(first_index);
+                        }
+
 
                         modify_tile_resource.modifying_segment_index = Some(best_segment_index);
                         modify_tile_resource.modify_origin_point = Some( intersection_position );
@@ -286,16 +305,21 @@ fn raycast_to_select_tiles(
 
 
 fn deselect_tiles(
-	mouse_input: Res<ButtonInput<MouseButton>>,
- 
-
-      mut modify_tile_resource: ResMut<ModifyTileResource>,
+    mut commands:Commands, 
+	mouse_input: Res<ButtonInput<MouseButton>>, 
+    mut modify_tile_resource: ResMut<ModifyTileResource>,
 ){
 
 
 	   let just_released = mouse_input.just_released(MouseButton::Left);
  
-        if !just_released {return};
+        if !just_released {return}; 
+
+        if let Some( tile_entity ) = &modify_tile_resource.modifying_tile {
+
+            commands.entity(*tile_entity).insert(ApplyModifications);
+        }
+
 
           modify_tile_resource.modifying_tile = None; 
           modify_tile_resource.modifying_segment_index = None;
@@ -382,12 +406,65 @@ fn update_modify_points(
 
 
             }  )
-            .insert( RebuildTileBlock )
+           .insert( RebuildTileBlock )
             ;
         }
 
     }
 
+
+
+
+}
+
+
+fn handle_apply_modifications(
+
+    mut commands:Commands, 
+      clay_tile_query: Query<(Entity, &  ClayTileBlock, Option<&ClayTileBlockPointsTranslation>), With<ApplyModifications>>
+
+
+
+){
+
+
+for (clay_tile_entity,    clay_tile_block, point_translation_comp) in clay_tile_query.iter(){
+
+
+    let mut updated_clay_tile_block = clay_tile_block.clone();
+
+    let polygon_points:&mut Vec<IVec2> = &mut updated_clay_tile_block.polygon_points;
+
+
+
+
+     if let Some(point_translation_comp) = point_translation_comp {
+            let translations = &point_translation_comp.point_translations;
+
+            // Apply translations to the polygon points
+            for (point_index, translation) in translations.iter() {
+
+
+                polygon_points[*point_index] += *translation;
+                 
+            }
+        }
+
+
+
+
+
+    commands.entity(clay_tile_entity).remove::<ClayTileBlockPointsTranslation>();
+
+    commands.entity(clay_tile_entity).remove::<ApplyModifications>();
+
+      if updated_clay_tile_block.is_complete() {
+
+        commands.entity(clay_tile_entity).insert( updated_clay_tile_block  );
+         commands.entity(clay_tile_entity).insert(RebuildTileBlock);
+    }
+   
+}
 
 
 
