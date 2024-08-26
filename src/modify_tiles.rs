@@ -31,7 +31,9 @@ pub(crate) fn modify_tiles_plugin(app: &mut App) {
     app .init_resource::<ModifyTileResource>()
     	.add_systems(Update, 
 
-    		(
+    		(     
+
+                update_inputs,
                 raycast_to_select_tiles,
 
                 deselect_tiles, 
@@ -59,7 +61,9 @@ pub(crate) fn modify_tiles_plugin(app: &mut App) {
 
 
 #[derive(Resource ,Default)]
-pub struct ModifyTileResource {
+pub struct ModifyTileResource { 
+
+    pub lock_to_single_axis: bool,
 
     pub modifying_tile: Option<Entity>,
     pub modifying_side: Option<TileBlockFaceType>,
@@ -159,6 +163,22 @@ pub struct TileHeightEditGizmo ;
 pub struct ClayTileBlockSelectable; 
 
 
+
+fn update_inputs(
+
+
+
+     key_inputs: Res<ButtonInput<KeyCode>>,
+     mut modify_tile_resource: ResMut<ModifyTileResource>,
+
+
+){
+
+    let shift_is_pressed = key_inputs.pressed(KeyCode::ShiftLeft);
+    modify_tile_resource.lock_to_single_axis = shift_is_pressed;
+
+
+}
 /*
 fn add_selectable_to_clay_tile_children(
 
@@ -549,8 +569,26 @@ fn update_modify_points(
 
         let drag_delta = modify_current_drag_endpoint - *modify_current_drag_startpoint ;
 
-        let drag_delta_ivec:IVec2 = IVec2::new( drag_delta.x as i32,  drag_delta.z as i32  );
+        let mut drag_delta_ivec:IVec2 = IVec2::new( drag_delta.x as i32,  drag_delta.z as i32  );
         info!("drag_delta , {:?}", drag_delta);
+
+
+
+        let lock_to_single_axis = &modify_tile_resource.lock_to_single_axis ;
+
+        if *lock_to_single_axis {
+
+            if drag_delta_ivec.x.abs() > drag_delta_ivec.y.abs() {
+
+                drag_delta_ivec.y = 0;
+            }else {
+
+                drag_delta_ivec.x = 0;
+            }
+
+        }
+
+       // info!("lock_to_single_axis {:?}, {:?}", lock_to_single_axis, drag_delta_ivec);
 
 
         let Some( modifying_point_indices ) =  &modify_tile_resource.modifying_point_indices else {return};

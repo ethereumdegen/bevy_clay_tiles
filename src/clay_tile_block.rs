@@ -720,6 +720,8 @@ pub fn build_tile_block_meshes(
             let mut preview_material =  StandardMaterial::from_color( Color::srgba(0.4, 0.7, 0.7, 0.7) ) ;
            
             preview_material.alpha_mode = AlphaMode::Blend;
+            preview_material.unlit = true; 
+            preview_material.cull_mode = None;
 
              let  preview_material_handle =   materials.add( 
                  preview_material
