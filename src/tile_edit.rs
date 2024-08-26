@@ -79,7 +79,7 @@ pub enum TileSelectionEvent {
 pub enum GridInteractionType{
     Press,
     Release,
-     Cancel
+    Cancel
 
 }
 
@@ -91,6 +91,10 @@ pub struct TileBuildPreviewResource{
     current_position: Option<IVec2> ,
 
 }
+
+
+
+
 
 
 
@@ -106,7 +110,7 @@ pub struct TileEditingResource{
 
     new_tile_parent_entity: Option<Entity>,
 
-    pub selected_tile: Option<Entity>,
+  //  pub selected_tile: Option<Entity>,
 }
 
 impl Default for TileEditingResource { 
@@ -119,7 +123,7 @@ impl Default for TileEditingResource {
         selected_tile_type: 0 ,
         build_mesh_height : 0.2 ,
         new_tile_parent_entity: None ,
-        selected_tile: None 
+       // selected_tile: None 
 
         }
     }
@@ -139,8 +143,10 @@ impl TileEditingResource {
 
     pub fn get_build_grid_enabled(&self) -> bool{
  
-        self.selected_tool.is_some() && self.tool_enabled
+        self.selected_tool.as_ref().is_some_and(|t| t.is_build_tool() ) && self.tool_enabled
     }
+
+
 
     pub fn set_build_grid_horizontal_offset( &mut self, offset: Vec2 ){
 
@@ -166,7 +172,7 @@ impl TileEditingResource {
         self.build_mesh_height 
     }
 
-       pub fn set_build_mesh_height(&mut self, height: f32)   {
+    pub fn set_build_mesh_height(&mut self, height: f32)   {
 
         self.build_mesh_height = height;
     }
@@ -205,14 +211,12 @@ impl TileEditingResource {
 
     }
 
+
+
     pub fn able_to_select_tiles(&self) -> bool {
 
 
-        match self.selected_tool{
-
-            Some(EditingTool::ModifyTile(..)) => true,
-            _ => false 
-        }
+          self.selected_tool.as_ref().is_some_and(|t| t.is_modify_tool() )
 
 
 
@@ -244,6 +248,30 @@ pub enum EditingTool {
     ModifyTile (ModifyTileTool)    
 }
 
+impl EditingTool {
+
+    pub fn is_build_tool(&self) -> bool {
+
+        match self {
+
+             EditingTool::BuildTile(..)  => true,
+            _ => false 
+        }
+
+    }
+
+    pub fn is_modify_tool(&self) -> bool {
+
+        match self {
+
+            EditingTool::ModifyTile(..)  => true,
+            _ => false 
+        }
+
+    }
+
+}
+
 
 #[derive(Debug, Clone)]
 pub enum BuildTileTool { 
@@ -256,6 +284,8 @@ pub enum BuildTileTool {
 
 #[derive(Debug, Clone)]
 pub enum ModifyTileTool { 
+    ModifyDragSides, 
+
     ModifyTileHeight , 
     ModifyTileBevel ,   
     ModifyTileType, 

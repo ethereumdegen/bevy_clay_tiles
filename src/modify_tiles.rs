@@ -5,17 +5,30 @@ use crate::clay_tile_block::ClayTileBlock;
 use bevy_mod_raycast::prelude::*;
 use bevy::prelude::*;
 
+/*
 
-pub(crate) fn tile_gizmos_plugin(app: &mut App) {
-    app
+
+
+- be able to modify dimensions -- push and pull them ! 
+    For ModifyDragSides...
+       When mouse down, use the normal to see if you are clicking the TOP or SIDE, .  THEN  figure out X and Z coords to figure out which bottom  segment you are grabbing . 
+
+
+
+*/
+
+pub(crate) fn modify_tiles_plugin(app: &mut App) {
+    app .init_resource::<ModifyTileResource>()
     	.add_systems(Update, 
 
     		(
                 raycast_to_select_tiles,
 
+                deselect_tiles, 
+
              
                 //add_selectable_to_clay_tile_children, 
-                add_gizmo_component_to_selected_tile,
+               // add_gizmo_component_to_selected_tile,
 
             
                 ).chain() 
@@ -27,6 +40,23 @@ pub(crate) fn tile_gizmos_plugin(app: &mut App) {
     }
 
 
+#[derive(Resource ,Default)]
+pub struct ModifyTileResource {
+
+    pub modifying_tile: Option<Entity>,
+    pub modifying_side: Option<TileBlockFaceType>,
+    pub modifying_segment_index: Option<usize>
+
+}
+
+#[derive(Clone,Hash,Eq,PartialEq,Debug)]
+pub enum TileBlockFaceType {
+
+	Top,
+	Bottom,
+	Side, 
+
+} 
 
 #[derive(Component)]
 pub struct TileHeightEditGizmo ;
@@ -77,7 +107,9 @@ fn raycast_to_select_tiles(
     raycast_filter_query: Query<Entity, With<ClayTileBlockSelectable>>,  //make sure meshes have this ?
     mouse_input: Res<ButtonInput<MouseButton>>,
 
-    mut tile_edit_resource: ResMut<TileEditingResource>,
+     tile_edit_resource: Res<TileEditingResource>,
+
+       mut modify_tile_resource: ResMut<ModifyTileResource>,
     ){
 
 
@@ -96,7 +128,10 @@ fn raycast_to_select_tiles(
 
             info!("selecting tile {:?}",  intersection_data);
 
-            tile_edit_resource.selected_tile = Some(*first_hit_entity);
+            modify_tile_resource.modifying_tile = Some(*first_hit_entity);
+
+
+            // if intesect w Side,   use X and Z to pick the BEST segment index as possible ... 
             
 
        }
@@ -105,18 +140,36 @@ fn raycast_to_select_tiles(
 }
 
 
+fn deselect_tiles(
+	mouse_input: Res<ButtonInput<MouseButton>>,
+ 
 
+      mut modify_tile_resource: ResMut<ModifyTileResource>,
+){
+
+
+	   let just_released = mouse_input.just_released(MouseButton::Left);
+ 
+        if !just_released {return};
+
+          modify_tile_resource.modifying_tile = None; 
+           
+
+
+
+
+}
 
 
 // need to render a gizmo on the selected tile
-
+/*
 fn add_gizmo_component_to_selected_tile(
     mut commands: Commands, 
     tile_edit_resource: Res <TileEditingResource>,
  ){
 
 
-    let Some(selected_tile) = &tile_edit_resource.selected_tile  else {return};
+    let Some(selected_tile) = &tile_edit_resource.modifying_tile  else {return};
 
 
 
@@ -124,4 +177,4 @@ fn add_gizmo_component_to_selected_tile(
 
    // info!("render gizmo on tile ");
 
-}
+}*/

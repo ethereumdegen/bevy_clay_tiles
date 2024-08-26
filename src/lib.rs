@@ -7,7 +7,7 @@ use bevy::utils::HashMap;
 use bevy_material_tool::BevyMaterialToolPlugin;
 use crate::tile_types_config::TileTypesConfig;
 //use crate::tiles_texturing::ClayTilesTypesConfigResource;
-use crate::tile_gizmos::tile_gizmos_plugin;
+use crate::modify_tiles::modify_tiles_plugin;
 use transform_gizmo_bevy::TransformGizmoPlugin; 
 
 use bevy::asset::{AssetPath, LoadState};
@@ -34,7 +34,7 @@ use bevy::{asset::load_internal_asset, prelude::*};
  pub mod tile_edit;
  pub mod pre_mesh;
  pub mod clay_tile;
- pub mod tile_gizmos;
+ pub mod modify_tiles;
  
 
 pub struct BevyClayTilesPlugin {
@@ -82,7 +82,7 @@ impl Plugin for BevyClayTilesPlugin {
         app
         .add_plugins(clay_tile_block_plugin)        
         .add_plugins(tile_edit_plugin)
-        .add_plugins(tile_gizmos_plugin)
+        .add_plugins(modify_tiles_plugin)
      //   .add_plugins(tiles_texturing::tiles_texturing_plugin)
 
 
