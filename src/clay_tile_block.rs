@@ -425,7 +425,7 @@ impl ClayTileBlock {
 
     pub fn is_complete(&self) -> bool {
 
-        info!("area is {:?}",self.get_polygon_area());
+      //  info!("area is {:?}",self.get_polygon_area());
 
 
         if self.get_polygon_area().abs() < 0.01 {
