@@ -1,10 +1,10 @@
-pub use bevy_material_tool;  //re export!
+ 
  
 use crate::tile_types_config::ClayTilesTypesConfigResource;
 use crate::tile_types_config::ClayTilesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
 use bevy::utils::HashMap;
-use bevy_material_tool::BevyMaterialToolPlugin;
+//use bevy_material_tool::BevyMaterialToolPlugin;
 use crate::tile_types_config::TileTypesConfig;
 //use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use crate::modify_tiles::modify_tiles_plugin;
@@ -62,13 +62,7 @@ impl Plugin for BevyClayTilesPlugin {
         );
         app.add_plugins(MaterialPlugin::<TileMaterialExtension>::default());
 
-         if !app.is_plugin_added::<BevyMaterialToolPlugin>() {
-            app.add_plugins(BevyMaterialToolPlugin{
-                    material_types_config_path: "assets/material_overrides/material_types.ron".to_string(),
-                    material_overrides_gltf_path : "material_overrides/doodad_material_overrides.glb".to_string()
-            }  );
-
-        }
+        
        
        if !app.is_plugin_added::<CursorRayPlugin>() {
              app.add_plugins(CursorRayPlugin);

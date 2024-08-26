@@ -13,7 +13,7 @@ use crate::tile_types_config::TileTypeConfig;
 use crate::tile_types_config;
 //use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use bevy::render::render_resource::Origin3d;
-use bevy_material_tool::material_overrides::MaterialOverrideComponent;
+//use bevy_material_tool::material_overrides::MaterialOverrideComponent;
 use serde::Serialize;
 use serde::Deserialize;
 //use crate::ClayTilesTexturingResource;
@@ -87,8 +87,11 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 
 
 
+#[derive(Component)]
+pub struct ClayTileMaterial {
 
-
+    pub material_name: String 
+}
 
 #[derive(Component)]
 pub struct ClayTileBlockBuilder {
@@ -113,7 +116,7 @@ fn default() -> Self {
         polygon_points: Vec::new(),
         height_level: 0,
         tile_type_index: 0,
-        mesh_height: 0.2
+        mesh_height: 1.0
     }
 
  }
@@ -751,7 +754,7 @@ pub fn build_tile_block_meshes(
 
                 commands.entity(block_entity)
              .insert( 
-                MaterialOverrideComponent{material_override: tile_material_name.to_string()}
+                ClayTileMaterial{material_name: tile_material_name.to_string()}
               );
 
 

@@ -121,7 +121,7 @@ impl Default for TileEditingResource {
         selected_tool: None,
         build_grid_data: TileBuildGridData::default(),
         selected_tile_type: 0 ,
-        build_mesh_height : 0.2 ,
+        build_mesh_height : 1.0 ,
         new_tile_parent_entity: None ,
        // selected_tile: None 
 

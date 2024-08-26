@@ -50,3 +50,30 @@ The edit mode allows you to control:
 
  
  
+
+
+### Tile Materials 
+
+When clay tiles blocks spawn, they will not have a material on them, only a component ClayTileMaterial { material_name: String }.  Therefore it is your responsibility to replace the component with your own material handle.   The example use the BevyMaterialTool to help with this but you can just insert a Handle<StandardMaterial> if you wish.
+
+  ```
+
+fn add_material_handles(
+    mut commands:Commands, 
+    block_query: Query<(Entity, &ClayTileMaterial), Added<ClayTileMaterial>>
+){
+
+    for (tile_entity, tile_material_comp) in block_query.iter(){
+
+        let material_name = &tile_material_comp.material_name;  
+
+        commands.get_entity(tile_entity).map( |mut cmd| { 
+          cmd.insert( MaterialOverrideComponent {
+            material_override:  material_name.clone()
+           }  );
+         } );
+
+    }
+
+}
+  ```

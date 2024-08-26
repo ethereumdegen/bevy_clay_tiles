@@ -1,6 +1,7 @@
  
  
   
+use bevy_clay_tiles::clay_tile_block::ClayTileMaterial;
 use bevy_clay_tiles::tile_edit::ModifyTileTool;
 use bevy_material_tool::BevyMaterialToolPlugin;
 use transform_gizmo_bevy::GizmoCamera;
@@ -18,6 +19,7 @@ use bevy::prelude::*;
 
  use bevy_clay_tiles::BevyClayTilesPlugin;
  
+ use bevy_material_tool::material_overrides::MaterialOverrideComponent;
  use bevy_material_tool::material_overrides::MaterialOverridesLoadingState; 
 
 fn main() {
@@ -38,6 +40,7 @@ fn main() {
         .add_systems(Update, rotate_camera  )
 
          .add_systems(Update, update_directional_light_position)
+           .add_systems(Update, add_material_handles)
         .run();
 }
 
@@ -168,4 +171,32 @@ fn update_directional_light_position(
         transform.translation = Vec3::new(x, y, z);
         transform.look_at(Vec3::ZERO, Vec3::Y);
     }
+}
+
+
+fn add_material_handles(
+    mut commands:Commands,
+
+    block_query: Query<(Entity, &ClayTileMaterial), Added<ClayTileMaterial>>
+){
+
+    for (tile_entity, tile_material_comp) in block_query.iter(){
+
+        let material_name = &tile_material_comp.material_name; 
+
+
+        commands.get_entity(tile_entity).map( |mut cmd| { 
+
+
+            cmd.remove::<ClayTileMaterial>( ); 
+
+            cmd.insert( MaterialOverrideComponent {
+                material_override:  material_name.clone()
+            }  ); 
+
+
+        } );
+
+    }
+
 }
