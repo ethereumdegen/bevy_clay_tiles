@@ -83,3 +83,10 @@ fn add_material_handles(
 
 }
   ```
+
+
+
+### Do you like this crate?  Support the creator on Patreon
+https://www.patreon.com/infernaltoast 
+ 
+ [![creatinggames-preview](https://github.com/user-attachments/assets/7e7904c1-5f2b-47b6-84dd-5626cb7baca0)](https://www.patreon.com/infernaltoast)
