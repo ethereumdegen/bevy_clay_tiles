@@ -48,6 +48,7 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 
 
         .register_type::<ClayTileBlock>()
+        .register_type::<ClayTileMaterial>()
     	.add_systems(Update, 
 
     		(
@@ -87,7 +88,8 @@ pub(crate) fn clay_tile_block_plugin(app: &mut App) {
 
 
 
-#[derive(Component)]
+#[derive(Component,Reflect,Debug,Clone)]
+#[reflect(Component)]
 pub struct ClayTileMaterial {
 
     pub material_name: String 

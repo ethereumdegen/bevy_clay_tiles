@@ -524,7 +524,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_clay_tiles"
-version = "0.14.16"
+version = "0.14.17"
 dependencies = [
  "anyhow",
  "bevy 0.14.0",
