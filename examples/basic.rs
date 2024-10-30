@@ -56,7 +56,7 @@ fn setup(
      commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(2.0, 7.5, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
-    }).insert(GizmoCamera);
+    }) ; 
 
          
 
@@ -138,7 +138,7 @@ fn load_sample_block(
 fn rotate_camera(mut query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
     let mut transform = query.single_mut();
 
-    transform.rotate_around(Vec3::ZERO, Quat::from_rotation_y(time.delta_seconds() / 20.));
+    transform.rotate_around(Vec3::ZERO, Quat::from_rotation_y(time.delta_secs() / 20.));
 }
 
 
