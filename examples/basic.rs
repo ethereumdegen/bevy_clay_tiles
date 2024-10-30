@@ -4,7 +4,7 @@
 use bevy_clay_tiles::clay_tile_block::ClayTileMaterial;
 use bevy_clay_tiles::tile_edit::ModifyTileTool;
 use bevy_material_tool::BevyMaterialToolPlugin;
-use transform_gizmo_bevy::GizmoCamera;
+ // use transform_gizmo_bevy::GizmoCamera;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlockBuilder;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlock;
 use bevy_clay_tiles::tile_edit::BuildTileTool;
