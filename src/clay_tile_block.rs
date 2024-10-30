@@ -253,10 +253,10 @@ fn render_gizmos_for_clay_tile_block_builders(
             let position = Vec3::new(point.x as f32, 1.0 * height_offset, point.y as f32);
 
             let radius = 0.1;
-            let rotation = Quat::IDENTITY;
+           // let rotation = Quat::IDENTITY;
             let color : Color = tailwind::EMERALD_400.into() ;
 
-            gizmos.sphere(position, rotation, radius, color) ;
+            gizmos.sphere(position,  radius, color) ;
            
         }
 
@@ -741,12 +741,12 @@ pub fn build_tile_block_meshes(
 
              commands.entity(block_entity)
              .insert(  (
-                mesh_handle,
+                    Mesh3d( mesh_handle ),
                     
                     ClayTileMesh,
                     ClayTileBlockSelectable,
                     Name::new("ClayTileBlock"),
-                    preview_material_handle,
+                    MeshMaterial3d (preview_material_handle),
                    
                 )  )
 

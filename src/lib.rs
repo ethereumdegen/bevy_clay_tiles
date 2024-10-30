@@ -8,12 +8,12 @@ use bevy::utils::HashMap;
 use crate::tile_types_config::TileTypesConfig;
 //use crate::tiles_texturing::ClayTilesTypesConfigResource;
 use crate::modify_tiles::modify_tiles_plugin;
-use transform_gizmo_bevy::TransformGizmoPlugin; 
+//use transform_gizmo_bevy::TransformGizmoPlugin; 
 
 use bevy::asset::{AssetPath, LoadState};
 use crate::tiles_config::ClayTilesConfig;
 //use crate::tiles_texturing::ClayTilesTexturingResource;
-use bevy_mod_raycast::prelude::CursorRayPlugin;
+// use bevy_mod_raycast::prelude::CursorRayPlugin;
 use crate::tile_edit::tile_edit_plugin;
 
 use crate::clay_tile_block::clay_tile_block_plugin;
@@ -63,12 +63,12 @@ impl Plugin for BevyClayTilesPlugin {
         app.add_plugins(MaterialPlugin::<TileMaterialExtension>::default());
 
         
-       
+           /* 
        if !app.is_plugin_added::<CursorRayPlugin>() {
              app.add_plugins(CursorRayPlugin);
         }
 
-     /*   if !app.is_plugin_added::<TransformGizmoPlugin>(){
+         if !app.is_plugin_added::<TransformGizmoPlugin>(){
             
             app.add_plugins(TransformGizmoPlugin);
         }*/

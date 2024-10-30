@@ -6,11 +6,13 @@ use crate::{clay_tile_block::RebuildTileBlock, tile_edit::{EditingTool, TileEdit
 use bevy::utils::{HashSet,HashMap};
 use crate::clay_tile_block::ClayTileBlock;
 //use bevy::reflect::List;
-use bevy_mod_raycast::prelude::*;
+//use bevy_mod_raycast::prelude::*;
 use bevy::prelude::*;
 
 use bevy::window::PrimaryWindow;
 
+
+use bevy::picking::backend::ray::RayMap; 
 /*
 
 
@@ -215,8 +217,12 @@ fn add_selectable_to_clay_tile_children(
  
 fn raycast_to_select_tiles(
     mut commands:Commands,
-    mut raycast: Raycast,
-    cursor_ray: Res<CursorRay>,
+  
+
+    //mut raycast: Raycast,
+    mut raycast: MeshRayCast,
+
+    cursor_ray: Res<RayMap>,
 
     raycast_filter_query: Query<Entity, With<ClayTileBlockSelectable>>,  //make sure meshes have this ?
     mouse_input: Res<ButtonInput<MouseButton>>,
@@ -246,9 +252,10 @@ fn raycast_to_select_tiles(
 
           
       let filter = |entity| raycast_filter_query.contains(entity);
-      if let Some(cursor_ray) = **cursor_ray {
+    //  if let Some(cursor_ray) = **cursor_ray {
+     for   (_, cursor_ray)  in cursor_ray.iter() {
 
-       let hits = raycast.cast_ray(cursor_ray, &RaycastSettings::default().with_filter(&filter));
+       let hits = raycast.cast_ray(*cursor_ray, &RayCastSettings::default().with_filter(&filter));
 
             //no hits if the mesh is dragged inverted ! 
 
@@ -272,8 +279,8 @@ fn raycast_to_select_tiles(
             	let clay_tile_height_level = &clay_tile_block.height_level; 
 
 
-            	let intersection_position = intersection_data.position();
-            	let intersection_normal = intersection_data.normal(); 
+            	let intersection_position = intersection_data.point ;
+            	let intersection_normal = intersection_data.normal ; 
 
                 let face_type = TileBlockFaceType::estimate_from_normal(intersection_normal);
 
@@ -527,7 +534,7 @@ fn update_modify_points(
 
        modify_tile_resource: Res<ModifyTileResource>,
 
-     cursor_ray: Res<CursorRay>,
+     cursor_ray: Res<RayMap>,
 
 
 
@@ -551,7 +558,7 @@ fn update_modify_points(
 
         let mut modify_current_drag_endpoint = None ;
 
-        if let Some(cursor_ray) = **cursor_ray  {
+        for (_ , cursor_ray)   in cursor_ray.iter() {
                 let origin = &cursor_ray.origin; 
                 let direction = &cursor_ray.direction;
 

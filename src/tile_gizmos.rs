@@ -2,9 +2,10 @@
 
 use crate::tile_edit::TileEditingResource;
 use crate::clay_tile_block::ClayTileBlock;
-use bevy_mod_raycast::prelude::*;
+//use bevy_mod_raycast::prelude::*;
 use bevy::prelude::*;
 
+use bevy::picking::backend::ray::RayMap; 
 
 pub(crate) fn tile_gizmos_plugin(app: &mut App) {
     app
@@ -71,8 +72,9 @@ fn add_selectable_to_clay_tile_children(
  
 fn raycast_to_select_tiles(
 
-    mut raycast: Raycast,
-    cursor_ray: Res<CursorRay>,
+     mut raycast: MeshRayCast,
+    //mut raycast: Raycast,
+    cursor_ray: Res<RayMap>,
 
     raycast_filter_query: Query<Entity, With<ClayTileBlockSelectable>>,  //make sure meshes have this ?
     mouse_input: Res<ButtonInput<MouseButton>>,
@@ -88,7 +90,9 @@ fn raycast_to_select_tiles(
         if !tile_edit_resource.able_to_select_tiles() {return} ;
 
       let filter = |entity| raycast_filter_query.contains(entity);
-      if let Some(cursor_ray) = **cursor_ray {
+     // if let Some(cursor_ray) = **cursor_ray {
+       for (_, cursor_ray) in cursor_ray.iter() {
+
 
        let hits = raycast.cast_ray(cursor_ray, &RaycastSettings::default().with_filter(&filter));
 

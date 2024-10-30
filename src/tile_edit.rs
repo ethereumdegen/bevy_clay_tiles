@@ -13,8 +13,9 @@ use bevy::render::mesh::Indices;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology::TriangleList;
  
+ use bevy::picking::backend::ray::RayMap;
 
-use bevy_mod_raycast::prelude::*;
+//use bevy_mod_raycast::prelude::*;
 
 
 pub(crate) fn tile_edit_plugin(app: &mut App) {
@@ -351,10 +352,11 @@ pub struct TileBuildGridData {
 
             //bizarre but.. yeah lol . due to quat rot 
           let grid_position = Vec3::new(x_offset,z_offset, -1.0 *  *height_offset as f32);
-
+        
+        // ??? 
 
            gizmos.grid(
-                grid_position,
+              //  grid_position,
                 Quat::from_rotation_x( PI / 2.),
                 UVec2::splat(100),
                 Vec2::splat(1.),
@@ -373,7 +375,9 @@ fn listen_for_input_events (
 
    mouse_input: Res<ButtonInput<MouseButton>>, //detect mouse click
 
-   cursor_ray: Res<CursorRay>,
+   //cursor_ray: Res<CursorRay>,
+    cursor_ray: Res<RayMap>,
+  
 
    mut build_grid_interaction_evt_writer: EventWriter<BuildGridInteractionEvent>,
 
@@ -389,7 +393,7 @@ fn listen_for_input_events (
      if  grid_enabled  && tool_enabled {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
-        if let Some(cursor_ray) = **cursor_ray {
+       for   (_, cursor_ray)  in cursor_ray.iter() {
             let origin = &cursor_ray.origin; 
             let direction = &cursor_ray.direction;
 
@@ -436,7 +440,10 @@ fn render_cursor_gizmo (
    tile_edit_resource: Res<TileEditingResource>,
  
 
-   cursor_ray: Res<CursorRay>,
+  // cursor_ray: Res<CursorRay>,
+   cursor_ray: Res<RayMap>,
+  
+
 
    mut gizmos: Gizmos,
 ) {
@@ -451,7 +458,8 @@ fn render_cursor_gizmo (
      if  grid_enabled && render_cursor_gizmo {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
-        if let Some(cursor_ray) = **cursor_ray {
+       // if let Some(cursor_ray) = **cursor_ray {
+         for   (_, cursor_ray)  in cursor_ray.iter() {
             let origin = &cursor_ray.origin; 
             let direction = &cursor_ray.direction;
 
@@ -475,7 +483,7 @@ fn render_cursor_gizmo (
                     let rotation = Quat::IDENTITY;
                     let color = tailwind::AMBER_400  ;
 
-                    gizmos.sphere(position, rotation, radius, color) ;
+                    gizmos.sphere(position,  radius, color) ;
 
                   
                 
@@ -489,7 +497,9 @@ fn update_build_grid_horizontal_offset (
     mut tile_edit_resource: ResMut<TileEditingResource>,
  
 
-   cursor_ray: Res<CursorRay>,
+   //cursor_ray: Res<CursorRay>,
+    cursor_ray: Res<RayMap>,
+  
 
 //   mut gizmos: Gizmos,
 ) {
@@ -501,8 +511,10 @@ fn update_build_grid_horizontal_offset (
      if  grid_enabled {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
-        if let Some(cursor_ray) = **cursor_ray {
-            let origin = &cursor_ray.origin; 
+       // if let Some(cursor_ray) = **cursor_ray {
+         for   (_, cursor_ray)  in cursor_ray.iter() {
+
+             let origin = &cursor_ray.origin; 
             let direction = &cursor_ray.direction;
 
 
@@ -852,7 +864,7 @@ fn update_tile_build_preview_rectangle(
       builder_query: Query<&  ClayTileBlockBuilder>,
 
 
-   cursor_ray: Res<CursorRay>,
+   cursor_ray_map: Res<RayMap>,
 
    mut gizmos: Gizmos,
 
@@ -863,7 +875,7 @@ fn update_tile_build_preview_rectangle(
   let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
 
 
-  let time_elapsed = time.elapsed_seconds ();
+  let time_elapsed = time.elapsed_secs ();
   let color_factor = (time_elapsed % 6.0)/ 6.0;
 
 
@@ -886,7 +898,9 @@ fn update_tile_build_preview_rectangle(
      if  grid_enabled && render_cursor_gizmo {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
-        if let Some(cursor_ray) = **cursor_ray {
+        //if let Some(cursor_ray) = **cursor_ray {
+            for (_ , cursor_ray) in cursor_ray_map.iter() {
+
             let origin = &cursor_ray.origin; 
             let direction = &cursor_ray.direction;
 
@@ -934,8 +948,13 @@ fn update_tile_build_preview_rectangle(
             let centroid = origin_f32.lerp( endpoint_f32 , 0.5);
 
              gizmos.rect(
-                centroid,
-                Quat::from_rotation_x(PI / 2.),
+
+               Isometry3d::new(
+                   centroid,
+                   Quat::from_rotation_x(PI / 2.),
+                ),
+
+ 
                 Vec2::new( dimensions.x as f32 , dimensions.y as f32)   ,
                 current_color,
             );
@@ -970,7 +989,8 @@ fn update_tile_build_preview_linear(
     builder_query: Query<&  ClayTileBlockBuilder>,
 
 
-   cursor_ray: Res<CursorRay>,
+   cursor_ray_map: Res<RayMap>,
+   //cursor_ray: Res<CursorRay>,
 
    mut gizmos: Gizmos,
 
@@ -981,7 +1001,7 @@ fn update_tile_build_preview_linear(
   let new_tile_parent_entity = tile_edit_resource.get_new_tile_parent_entity();
 
 
-  let time_elapsed = time.elapsed_seconds ();
+  let time_elapsed = time.elapsed_secs ();
   let color_factor = (time_elapsed % 6.0)/ 6.0;
 
 
@@ -1004,7 +1024,8 @@ fn update_tile_build_preview_linear(
      if  grid_enabled && render_cursor_gizmo {
  //   let build_grid_height = 0.0; // this is a flat plane where  X and Z are always 0 
 
-        if let Some(cursor_ray) = **cursor_ray {
+       // if let Some(cursor_ray) = **cursor_ray {
+        for (_ , cursor_ray )in cursor_ray_map.iter(){ 
             let origin = &cursor_ray.origin; 
             let direction = &cursor_ray.direction;
 
@@ -1068,11 +1089,18 @@ fn update_tile_build_preview_linear(
            let total_rotation =  Quat::from_rotation_x(PI / 2.) *   Quat::from_rotation_z(rotation_angle);
 
             gizmos.rect(
-                midpoint,
-                total_rotation, //Quat::from_rotation_x(rotation_angle) * Quat::from_rotation_y(rotation_angle),
+                
+
+                 Isometry3d::new(
+                   midpoint,
+                   total_rotation,
+                ),
+
+ 
                 Vec2::new(length, thickness),
                 current_color,
             );
+           
 
 
 
