@@ -3,7 +3,7 @@
    
 use bevy_clay_tiles::clay_tile_block::ClayTileMaterial;
 use bevy_clay_tiles::tile_edit::ModifyTileTool;
-use bevy_material_tool::BevyMaterialToolPlugin;
+use bevy_material_wizard::BevyMaterialWizardPlugin;
  // use transform_gizmo_bevy::GizmoCamera;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlockBuilder;
 use bevy_clay_tiles::clay_tile_block::ClayTileBlock;
@@ -19,24 +19,23 @@ use bevy::prelude::*;
 
  use bevy_clay_tiles::BevyClayTilesPlugin;
  
- use bevy_material_tool::material_overrides::MaterialOverrideComponent;
- use bevy_material_tool::material_overrides::MaterialOverridesLoadingState; 
+ use bevy_material_wizard::material_overrides::MaterialOverrideComponent;
+ 
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(BevyMaterialToolPlugin{
-            material_types_config_path: "assets/material_overrides/material_types.ron".to_string(),
-            material_overrides_gltf_path:  "material_overrides/doodad_material_overrides.glb".to_string(),
+        .add_plugins(BevyMaterialWizardPlugin{
+            material_defs_folder_path: "assets/material_overrides".to_string(), 
         })
         .add_plugins(BevyClayTilesPlugin {
             config: ClayTilesConfig::load_from_file("assets/tiles_config.ron").unwrap()
         })
         //.add_startup_system(setup)
         .add_systems(Startup, setup )
-        .add_systems(Startup, bevy_material_tool::material_overrides::begin_loading_materials )
+        
 
-        .add_systems(OnEnter(  MaterialOverridesLoadingState::Complete ), load_sample_block)
+        .add_systems( Startup, load_sample_block)
         .add_systems(Update, rotate_camera  )
 
          .add_systems(Update, update_directional_light_position)
@@ -66,18 +65,19 @@ fn setup(
     });
 
         // light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn( 
+         ( 
+            DirectionalLight {
             //shadow_depth_bias: 0.5,
             //shadow_normal_bias: 0.5,
             illuminance: 700.0,  
             color: Color::srgba(1.0, 1.0, 1.0, 1.0),
 
             ..default()
-        },
-        transform: Transform::from_xyz(4.0, 6.0, 4.0),
-        ..default()
-    });
+             },
+             Transform::from_xyz(4.0, 6.0, 4.0),
+        )
+      );
     // light
  
 
