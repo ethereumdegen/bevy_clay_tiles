@@ -47,16 +47,12 @@ geo = "0.28.0"
 
 
 [dev-dependencies] 
-<<<<<<< HEAD
+ 
  # transform-gizmo-bevy = "0.3.0"
  bevy_material_wizard = "0.15.0"
- 
-=======
+  
 transform-gizmo-bevy = "0.3.0"
-
- #bevy_material_tool = "0.14.3"
- #bevy_material_tool = {path="../bevy_material_tool"}
->>>>>>> d17c72c7186bfeacb9a9106ff0a9b4d478b2b106
+ 
 
   # bevy_material_wizard = {path="../bevy_material_wizard"}
 
