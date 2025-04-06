@@ -3,7 +3,7 @@
 use crate::tile_types_config::ClayTilesTypesConfigResource;
 use crate::tile_types_config::ClayTilesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::hash_map::HashMap;
 //use bevy_material_tool::BevyMaterialToolPlugin;
 use crate::tile_types_config::TileTypesConfig;
 //use crate::tiles_texturing::ClayTilesTypesConfigResource;

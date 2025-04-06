@@ -3,7 +3,10 @@
 use crate::tile_edit::ModifyTileTool;
 use crate::{clay_tile_block::RebuildTileBlock, tile_edit::{EditingTool, TileEditingResource}};
 
-use bevy::utils::{HashSet,HashMap};
+  use bevy::platform_support::collections::hash_map::HashMap;
+
+ use bevy::platform_support::collections::hash_set::HashSet;
+
 use crate::clay_tile_block::ClayTileBlock;
 //use bevy::reflect::List;
 //use bevy_mod_raycast::prelude::*;
@@ -244,7 +247,7 @@ fn raycast_to_select_tiles(
  
         if !just_clicked {return};
 
-        let Some(cursor_position) = window_query.single().cursor_position() else {return} ;
+        let Some(cursor_position) = window_query.single().ok().map( |w| w.cursor_position() ).flatten()  else {return} ;
 
 
 
@@ -255,7 +258,7 @@ fn raycast_to_select_tiles(
     //  if let Some(cursor_ray) = **cursor_ray {
      for   (_, cursor_ray)  in cursor_ray.iter() {
 
-       let hits = raycast.cast_ray(*cursor_ray, &RayCastSettings::default().with_filter(&filter));
+       let hits = raycast.cast_ray(*cursor_ray, &MeshRayCastSettings::default().with_filter(&filter));
 
             //no hits if the mesh is dragged inverted ! 
 
@@ -269,7 +272,7 @@ fn raycast_to_select_tiles(
 
             if let Some( clay_tile_block ) = clay_tile_block_query.get( *first_hit_entity).ok() {
 
-                if let Some(mut cmd) = commands.get_entity(*first_hit_entity){
+                if let Some(mut cmd) = commands.get_entity(*first_hit_entity).ok() {
                     cmd.insert(ModifyingClayTile);
                 }
 
@@ -341,7 +344,7 @@ fn raycast_to_select_tiles(
                             let start_index = (best_segment_index + 0) % tile_block_polygon_points.len();
                             let end_index = (best_segment_index + 1) % tile_block_polygon_points.len();
                             
-                            let mut point_indices = HashSet::new();
+                            let mut point_indices = HashSet::with_hasher(Default::default() ) ;
 
                             point_indices.insert(start_index);
                             point_indices.insert(end_index);
@@ -436,7 +439,7 @@ fn raycast_to_select_tiles(
 
                             info!("vertex index: {}", best_vertex_index);
 
-                            let mut point_indices = HashSet::new();
+                            let mut point_indices =  HashSet::with_hasher(Default::default() ) ;
                             point_indices.insert(best_vertex_index);
 
 
@@ -600,7 +603,7 @@ fn update_modify_points(
 
         let Some( modifying_point_indices ) =  &modify_tile_resource.modifying_point_indices else {return};
 
-        let mut point_translations = HashMap::new();
+        let mut point_translations = HashMap::with_hasher(Default::default() ) ;
 
         for i in modifying_point_indices.iter(){
 
@@ -610,7 +613,7 @@ fn update_modify_points(
        
 
 
-        if let Some(mut cmd) = commands.get_entity(*clay_tile_entity ){
+        if let Some(mut cmd) = commands.get_entity(*clay_tile_entity ).ok() {
             info!("modifying tile..");
 
             cmd
@@ -666,7 +669,7 @@ fn update_modify_mesh_height(
      let Some(modify_current_drag_startpoint) = &modify_tile_resource.modify_cursor_origin_coords else {return};
 
 
-    let Some(current_cursor_position) = window_query.single().cursor_position() else {return} ;
+    let Some(current_cursor_position) = window_query.single().ok().map( |w| w.cursor_position()).flatten()  else {return} ;
 
 
        
@@ -681,7 +684,7 @@ fn update_modify_mesh_height(
         
 
 
-        if let Some(mut cmd) = commands.get_entity(*clay_tile_entity ){
+        if let Some(mut cmd) = commands.get_entity(*clay_tile_entity ).ok() {
             info!("modifying tile..");
 
             cmd

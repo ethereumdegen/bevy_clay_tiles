@@ -7,7 +7,7 @@ also should incorporate the paths to the height and splat folders for their text
 
 */
 use crate::ClayTilesConfig;
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::hash_map::HashMap;
 use bevy::prelude::*;
 
 use serde::{Deserialize, Serialize};
@@ -43,7 +43,7 @@ impl ClayTilesTypesConfigResource {
 
     pub fn new( types_config: &TileTypesConfig ) -> Self {
 
-        let mut tile_type_data = HashMap::new();
+        let mut tile_type_data = HashMap::with_hasher(Default::default());
 
         for (i, element) in types_config.tile_types.iter().enumerate() {
 

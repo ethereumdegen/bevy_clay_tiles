@@ -3,10 +3,10 @@ name = "bevy_clay_tiles"
 description = "A procedural-mesh building system for bevy"
  
  
-version = "0.15.1"
+version = "0.16.0"
  
  
-edition = "2021"
+edition = "2024"
 authors = [ "ethereumdegen" ]
 license = "MIT"
 readme = "readme.md"
@@ -18,7 +18,7 @@ keywords = [ "region" , "bevy" ]
 [dependencies]
 
 
-bevy = "0.15.0"
+bevy = "0.16.0-rc.2"
  
 
 anyhow = "1.0.75"
@@ -46,8 +46,7 @@ geo = "0.28.0"
 
 
 [dev-dependencies] 
- 
- # transform-gizmo-bevy = "0.3.0"
+  
  bevy_material_wizard = "0.15.0"
   
 #transform-gizmo-bevy = "0.3.0"  # needs update to 15 

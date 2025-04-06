@@ -5,7 +5,7 @@ use crate::modify_tiles::ClayTileBlockMeshHeightTranslation;
 use crate::modify_tiles::ClayTileBlockPointsTranslation;
 
 
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::hash_map::HashMap;
 use crate::modify_tiles::ClayTileBlockSelectable;
 use crate::ClayTilesTypesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
@@ -278,7 +278,7 @@ fn render_gizmos_for_clay_tile_block_builders(
 
 fn update_clay_tile_block_builders(
     mut commands: Commands,
-    query: Query<(Entity, &ClayTileBlockBuilder, Option<&Parent>)>,
+    query: Query<(Entity, &ClayTileBlockBuilder, Option<&ChildOf>)>,
 
      tile_edit_resource: Res<TileEditingResource>,
 ) {
@@ -290,10 +290,10 @@ fn update_clay_tile_block_builders(
             // Build the ClayTileBlock from the builder
             if let Some(clay_tile_block) = builder.build() {
                 // Despawn the builder entity
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn ();
 
                 // Spawn the new ClayTileBlock
-               let new_block =  commands.spawn(SpatialBundle::default())
+               let new_block =  commands.spawn((Transform::default(),Visibility::default() ))
                
                 .insert( clay_tile_block )
                 //.insert( RebuildTileBlock ) 
@@ -319,7 +319,7 @@ fn init_build_clay_tile_block (
 ) {
    
     for  entity   in tile_block_query.iter() {
-        if let Some(mut cmd) = commands.get_entity(entity){ 
+        if let Some(mut cmd) = commands.get_entity(entity).ok(){ 
             info!("insert rebuild tile block ");
             cmd.insert(RebuildTileBlock); 
         }
@@ -330,7 +330,7 @@ fn init_build_clay_tile_block (
 
 
 
-pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
+// pub type TilePbrBundle = MaterialMeshBundle<TileMaterialExtension>;
 
 
 
@@ -563,7 +563,7 @@ pub fn build_tile_block_meshes(
 	 (
         Entity, 
         &mut ClayTileBlock,  
-        Option<&Parent>, 
+        Option<&ChildOf>, 
         &mut Transform, 
         Option<&ClayTileBlockPointsTranslation>, 
         Option<&ClayTileBlockMeshHeightTranslation>,
@@ -693,7 +693,7 @@ pub fn build_tile_block_meshes(
             };
 
 
-            commands.entity(block_entity).despawn_descendants();
+            commands.entity(block_entity).despawn ();  //replaced despawn_descendants 
 
 
              

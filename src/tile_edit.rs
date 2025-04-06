@@ -406,13 +406,13 @@ fn listen_for_input_events (
                 // Check if the left mouse button was just pressed
                 if mouse_input.just_pressed(MouseButton::Left) {
 
-                    build_grid_interaction_evt_writer.send(BuildGridInteractionEvent {
+                    build_grid_interaction_evt_writer.write(BuildGridInteractionEvent {
                         coordinates: Vec2::new(point_intersecting_build_grid.x, point_intersecting_build_grid.z),
                         interaction_type: GridInteractionType::Press
                     });
                 }else if mouse_input.just_released(MouseButton::Left){
 
-                    build_grid_interaction_evt_writer.send(BuildGridInteractionEvent {
+                    build_grid_interaction_evt_writer.write(BuildGridInteractionEvent {
                         coordinates: Vec2::new(point_intersecting_build_grid.x, point_intersecting_build_grid.z),
                         interaction_type: GridInteractionType::Release
                     });
@@ -421,7 +421,7 @@ fn listen_for_input_events (
 
                  if mouse_input.just_pressed(MouseButton::Right) {
 
-                    build_grid_interaction_evt_writer.send(BuildGridInteractionEvent {
+                    build_grid_interaction_evt_writer.write(BuildGridInteractionEvent {
                         coordinates: Vec2::new(point_intersecting_build_grid.x, point_intersecting_build_grid.z),
                         interaction_type: GridInteractionType::Cancel
                     });
@@ -582,7 +582,7 @@ fn handle_polygon_tile_build_events(
                         evt.coordinates.y.round() as i32,
                     ); 
                     
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                         // Add the point to the existing builder
                         builder.polygon_points.push(position);
                     } else {
@@ -593,7 +593,8 @@ fn handle_polygon_tile_build_events(
 
                         // No builder exists, create a new one
                         let block_builder_entity = commands.spawn((
-                             SpatialBundle::default(),
+                             Transform::default(),
+                             Visibility::default(), 
                               ClayTileBlockBuilder {
                                 polygon_points: vec![position],
 
@@ -615,10 +616,13 @@ fn handle_polygon_tile_build_events(
                 GridInteractionType::Cancel => {
  
                     
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
-                      
-                       if let Some(mut cmd) = commands.get_entity(builder_entity){
-                           cmd.despawn_recursive();
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
+                        
+
+                       if let Some(mut cmd) = commands.get_entity(builder_entity).ok() {
+                           cmd.despawn();
+
+                           // cmd.despawn_recursive();
                        }
                     }  
 
@@ -653,7 +657,7 @@ fn handle_rectangle_tile_build_events(
                     );
 
                     
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                         // Replace the existing point with the new start point
                         builder.polygon_points.clear();
                         builder.polygon_points.push(position);
@@ -665,7 +669,8 @@ fn handle_rectangle_tile_build_events(
 
                         // No builder exists, create a new one with the first point
                         let block_builder_entity = commands.spawn((
-                            SpatialBundle::default(),
+                            Transform::default(),
+                            Visibility::default() , 
                             ClayTileBlockBuilder {
                                 polygon_points: vec![position],
                                 height_level,
@@ -678,11 +683,13 @@ fn handle_rectangle_tile_build_events(
                          if let Some( new_tile_parent_entity ) = new_tile_parent_entity {
 
                             commands.entity(block_builder_entity).set_parent( new_tile_parent_entity );
+
+
                         }
                     }
                 }
                 GridInteractionType::Release => {
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                         if let Some(&start_point) = builder.polygon_points.first() {
                             
                             let end_point = IVec2::new(
@@ -708,10 +715,10 @@ fn handle_rectangle_tile_build_events(
                  GridInteractionType::Cancel => {
  
                     
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                       
-                       if let Some(mut cmd) = commands.get_entity(builder_entity){
-                           cmd.despawn_recursive();
+                       if let Some(mut cmd) = commands.get_entity(builder_entity).ok() {
+                           cmd.despawn ();
                        }
                     }  
 
@@ -749,7 +756,7 @@ fn handle_linear_tile_build_events(
                     );
 
                     
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                         // Replace the existing point with the new start point
                         builder.polygon_points.clear();
                         builder.polygon_points.push(position);
@@ -761,7 +768,8 @@ fn handle_linear_tile_build_events(
 
                         // No builder exists, create a new one with the first point
                         let block_builder_entity = commands.spawn((
-                            SpatialBundle::default(),
+                            Transform::default(),
+                            Visibility::default() , 
                             ClayTileBlockBuilder {
                                 polygon_points: vec![position],
                                 height_level,
@@ -778,7 +786,7 @@ fn handle_linear_tile_build_events(
                     }
                 }
                 GridInteractionType::Release => {
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                         if let Some(&start_point) = builder.polygon_points.first() {
                             
                             let end_point = IVec2::new(
@@ -836,10 +844,10 @@ fn handle_linear_tile_build_events(
                  GridInteractionType::Cancel => {
  
                     
-                    if let Ok((builder_entity, mut builder)) = builder_query.get_single_mut() {
+                    if let Ok((builder_entity, mut builder)) = builder_query.single_mut() {
                       
-                       if let Some(mut cmd) = commands.get_entity(builder_entity){
-                           cmd.despawn_recursive();
+                       if let Some(mut cmd) = commands.get_entity(builder_entity) .ok() {
+                           cmd.despawn ();
                        }
                     }  
 
@@ -927,7 +935,7 @@ fn update_tile_build_preview_rectangle(
 
      let mut origin_point = None;
 
-     if let Some( clay_tile_block_builder ) = builder_query.get_single().ok() {
+     if let Some( clay_tile_block_builder ) = builder_query.single().ok() {
  
         origin_point = clay_tile_block_builder.get_origin_point();
 
@@ -1052,7 +1060,7 @@ fn update_tile_build_preview_linear(
 
      let mut origin_point = None;
 
-     if let Some( clay_tile_block_builder ) = builder_query.get_single().ok() {
+     if let Some( clay_tile_block_builder ) = builder_query.single().ok() {
  
         origin_point = clay_tile_block_builder.get_origin_point();
 
