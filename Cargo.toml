@@ -18,7 +18,7 @@ keywords = [ "region" , "bevy" ]
 [dependencies]
 
 
-bevy = "0.16.0-rc.2"
+bevy = "0.16.0"
  
 
 anyhow = "1.0.75"
@@ -47,14 +47,11 @@ geo = "0.28.0"
 
 [dev-dependencies] 
   
- bevy_material_wizard = "0.15.0"
+ bevy_material_wizard = "0.16.0"
   
 #transform-gizmo-bevy = "0.3.0"  # needs update to 15 
  
-
-  # bevy_material_wizard = {path="../bevy_material_wizard"}
-
-
+ 
  
 [[example]]
 name = "basic"

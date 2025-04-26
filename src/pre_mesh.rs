@@ -1,6 +1,6 @@
 
  use geo::Coord;
- use bevy::platform_support::collections::hash_map::HashMap;
+ use bevy::platform::collections::hash_map::HashMap;
 use geo::algorithm::centroid::Centroid;
  
 use lyon::math::{Box2D, Point, point};

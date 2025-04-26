@@ -3,9 +3,9 @@
 use crate::tile_edit::ModifyTileTool;
 use crate::{clay_tile_block::RebuildTileBlock, tile_edit::{EditingTool, TileEditingResource}};
 
-  use bevy::platform_support::collections::hash_map::HashMap;
+  use bevy::platform::collections::hash_map::HashMap;
 
- use bevy::platform_support::collections::hash_set::HashSet;
+ use bevy::platform::collections::hash_set::HashSet;
 
 use crate::clay_tile_block::ClayTileBlock;
 //use bevy::reflect::List;

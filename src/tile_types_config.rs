@@ -7,7 +7,7 @@ also should incorporate the paths to the height and splat folders for their text
 
 */
 use crate::ClayTilesConfig;
-use bevy::platform_support::collections::hash_map::HashMap;
+use bevy::platform::collections::hash_map::HashMap;
 use bevy::prelude::*;
 
 use serde::{Deserialize, Serialize};

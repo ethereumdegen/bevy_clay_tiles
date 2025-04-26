@@ -5,7 +5,7 @@ use crate::modify_tiles::ClayTileBlockMeshHeightTranslation;
 use crate::modify_tiles::ClayTileBlockPointsTranslation;
 
 
-use bevy::platform_support::collections::hash_map::HashMap;
+use bevy::platform::collections::hash_map::HashMap;
 use crate::modify_tiles::ClayTileBlockSelectable;
 use crate::ClayTilesTypesConfigResource;
 use crate::tile_types_config::TileTypeConfig;
