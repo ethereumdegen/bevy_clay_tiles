@@ -599,7 +599,14 @@ pub fn build_tile_block_meshes(
  
 
 
-		commands.entity(block_entity).remove::<RebuildTileBlock>();
+              let _ =   commands.get_entity(block_entity).map(
+                    |mut cmd| { 
+
+                       let _removed =  cmd .remove::<RebuildTileBlock>() ; 
+
+                         }
+                ) ;
+	 
 
 		
 		/*let Some((clay_tiles_root,clay_tiles_config)) = tile_root_query.get(parent.get()).ok() else {
@@ -693,7 +700,8 @@ pub fn build_tile_block_meshes(
             };
 
 
-            commands.entity(block_entity).despawn ();  //replaced despawn_descendants 
+            commands.entity(block_entity).despawn_related::<Children> ();  //replaced despawn_descendants 
+
 
 
              
@@ -755,9 +763,9 @@ pub fn build_tile_block_meshes(
              if !use_modify_preview_material {
 
                 commands.entity(block_entity)
-             .insert( 
-                ClayTileMaterial{material_name: tile_material_name.to_string()}
-              );
+                     .insert( 
+                        ClayTileMaterial{material_name: tile_material_name.to_string()}
+                      );
 
 
              }
